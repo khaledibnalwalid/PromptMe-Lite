@@ -1,7 +1,7 @@
 # PromptMe 
 
 <p>
-<img src="https://github.com/R3dShad0w7/PromptMe/blob/main/static/PromptMe1_2.png?raw=true" width="600" alt="Thumbnail"/>
+<img src="https://github.com/R3dShad0w7/PromptMe/blob/main/static/logo.png?raw=true" width="600" alt="Thumbnail"/>
 </p>
 
 ### A vulnerable application designed to demonstrate the OWASP Top 10 for Large Language Model (LLM) Applications.
