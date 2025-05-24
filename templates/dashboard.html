@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OWASP LLM Top 10 Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <style>
+    .tiles-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .tile {
+      position: relative;
+      background: #f4f4f9;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .running-status {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #4CAF50;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-size: 12px;
+      display: none;
+    }
+
+    .tile h3 {
+      margin-top: 10px;
+    }
+
+    .tile-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .tile-button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100px;
+    }
+
+    .tile-button.start {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .tile-button.stop {
+      background: #F44336;
+      color: white;
+    }
+
+    .tile-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+</style>
+</head>
+<body>
+  <h1>PromptMe</h1>
+  <h3>OWASP LLM Top 10 CTF Challenges</h3>
+  <div class="tiles-container">
+    {% for risk in risks %}
+      <div class="tile" id="tile-{{ risk.id }}">
+        <div class="running-status" id="status-{{ risk.id }}">Running</div>
+        <i class="{{ risk.icon }}" style="font-size: 36px;"></i>
+        <h3>{{ risk.title }}</h3>
+        <div class="control-buttons">
+          <button class="start" onclick="startChallenge({{ risk.id }})">Start</button>
+          <button class="stop" onclick="stopChallenge({{ risk.id }})">Stop</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    function startChallenge(challengeId) {
+      window.open(`/start/${challengeId}`, '_blank');
+      document.getElementById(`status-${challengeId}`).style.display = 'block';
+    }
+
+    function stopChallenge(challengeId) {
+      fetch(`/stop/${challengeId}`)
+        .then(response => response.text())
+        .then(alert);
+
+      document.getElementById(`status-${challengeId}`).style.display = 'none';
+    }
+  </script>
+</body>
+</html>

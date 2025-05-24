@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>LLM01: Prompt Injection</title>
+    <script>
+        function showLoading() {
+            document.getElementById("loading").style.display = "block";
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>LLM01: Prompt Injection</h1>
+        <p class="subtitle"> LLM-powered chatbot app with admin/participant login and chat storage</p>
+        <p class="subtitle">Goal: Get the Admin's secret key using Prompt Injection</p>
+
+        <!-- Flash Message -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li class="flash-message {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}" onsubmit="showLoading()" class="login-form">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+        
+            <div class="form-group">
+                <label for="role">Role:</label>
+                <select name="role" id="role" required>
+                    <option value="" disabled selected>Select your role</option>
+                    <option value="participant">Participant</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+        
+            <button type="submit">Login</button>
+        </form>
+        
+
+        <div id="loading" class="loading" style="display: none;">Logging in...</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+    <body class="text-center">
+        <div class="container">
+            <form method="post" class="form-login">
+                {{ form.hidden_tag() }}
+                <h1>Account | Login</h1>
+                <br>{{ form.username(class="form-control", placeholder="Username..") }}
+                <br>{{ form.password(class="form-control", placeholder="Password..") }}
+                <br>
+                <div class="checkbox mb-3">
+                    <h6>Don't have an account?
+                        <a class="btn btn-sm btn-outline-warning btn-secondary" href="{{ url_for('RegisterPage') }}">Create Account</a>
+                    </h6>
+                </div>
+                {{ form.submit(class="btn btn-lg btn-outline-warning") }}
+            </form>
+        </div>
+    </body>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+
+<div class="row" style="margin-top:20px; margin-left:20px">
+    <div class="col-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div>
+                    {% for category, message in messages %}
+                        <div class="alert {% if category == 'flag' %}flag-message{% else %}alert-{{ category }}{% endif %}">
+                            {{ message | safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+</div>
+
+
+        <h2 style="text-align: center;">Available Items</h2>
+        <table class="table table-hover table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Barcode</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Description</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                {% include 'modals/items.html' %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.barcode }}</td>
+                    <td>{{ item.prettier_price }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>
+                        <button class="btn btn-outline btn-info" data-toggle="modal" data-target="#Info-{{ item.id }}">Info</button>
+                        <button class="btn btn-outline btn-success" data-toggle="modal"data-target="#Buy-{{ item.id }}">Buy</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+   
+    {% endblock %}

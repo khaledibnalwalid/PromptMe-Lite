@@ -1,0 +1,100 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    text-align: center;
+    color: #00e5ff;
+}
+
+.subtitle {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 30px;
+}
+
+textarea {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 5px;
+    resize: vertical;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #00e5ff;
+    border: none;
+    color: black;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #00bcd4;
+}
+
+.loading {
+    background-color: #333;
+    color: #00e5ff;
+    padding: 10px;
+    margin-top: 20px;
+    border-left: 5px solid #00e5ff;
+    border-radius: 5px;
+    font-style: italic;
+    font-size: 16px;
+}
+
+.history {
+    margin-top: 30px;
+}
+
+.message {
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #2c2c2c;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+.message.user {
+    border-left: 5px solid #00e5ff;
+}
+
+.message.ai {
+    border-left: 5px solid #4caf50;
+}
+
+.flag {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 14px;
+    background-color: #ff0033;
+    color: white;
+    font-weight: bold;
+    font-family: monospace;
+    border-radius: 6px;
+    border: 2px solid #ff4d4d;
+}
+

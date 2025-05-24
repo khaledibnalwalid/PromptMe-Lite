@@ -1,0 +1,79 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #121212;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #00e5ff;
+}
+
+.tiles-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.tile {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    color: #333333; /* Darker text color for better contrast */
+}
+
+.tile:hover {
+    transform: scale(1.05);
+}
+
+.tile i {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #333333; /* Darker icon color */
+}
+
+.tile h3 {
+    color: #333333; /* Darker font for better contrast */
+}
+
+.control-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 10px;
+}
+
+.control-buttons button {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    color: #ffffff;
+}
+
+.control-buttons button.start {
+    background-color: #4CAF50;
+}
+
+.control-buttons button.stop {
+    background-color: #F44336;
+}
+
+.control-buttons button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    color: #666666;
+}
+
+.control-buttons button:hover:not(:disabled) {
+    opacity: 0.8;
+}
+

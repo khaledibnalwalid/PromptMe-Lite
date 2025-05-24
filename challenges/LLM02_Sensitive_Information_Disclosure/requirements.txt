@@ -1,0 +1,10 @@
+Flask==3.1.1
+requests==2.32.3
+faiss-cpu==1.11.0
+sentence-transformers==4.1.0
+pypdf==5.5.0
+langchain==0.3.25
+langchain-community==0.3.24
+langchain-core==0.3.60
+langchain-text-splitters==0.3.8
+langsmith==0.3.42

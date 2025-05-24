@@ -1,0 +1,60 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWASP Challenge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function sendMessage() {
+
+            const userInput = document.getElementById("user-input");
+            const chatBox = document.getElementById("chat-box");
+
+            if (userInput.value.trim() === "") return;
+
+            // Show typing animation
+            const typingAnimation = document.getElementById("typing");
+            typingAnimation.style.display = 'block';
+
+            // Append user message to chat box
+            const userMessage = `<pre class='message user-message'>${userInput.value}</pre>`;
+            chatBox.innerHTML += userMessage;
+
+            // Send request to Flask API
+            fetch("/chat", {
+                method: "POST",
+                body: JSON.stringify({ message: userInput.value }),
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const botMessage = `<pre class='message bot-message'>${data.reply}</pre>`;
+                chatBox.innerHTML += botMessage;
+                chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll
+                typingAnimation.style.display = 'none';
+            });
+
+            userInput.value = ""; // Clear input field
+        }
+    </script>
+</head>
+<body>
+    <h1>{{ vuln.title }} CTF Challenge</h1>
+    <p>📌 Solve this challenge by bypassing security measures.</p>
+    <a href="/">🔙 Back to Dashboard</a>
+    <div class="chat-container">
+        <h2 class="chat-header">💬 OWASP CTF Chat</h2>
+        <div class="chat-box" id="chat-box"></div>
+        <div id='typing' class='message bot-message typing' style="display: none;">
+            🤖 AI is thinking<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</body>
+</html>

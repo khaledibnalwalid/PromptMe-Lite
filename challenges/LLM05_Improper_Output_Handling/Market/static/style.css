@@ -1,0 +1,163 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    padding: 20px;
+}
+
+.vuln-tile {
+    display: block;
+    padding: 20px;
+    text-decoration: none;
+    background-color: #f4f4f4;
+    color: black;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.vuln-tile:hover {
+    background-color: #ddd;
+    transform: scale(1.05);
+}
+
+
+.chat-container {
+    width: 80%;
+    margin: auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f9f9f9;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header {
+    background: #007BFF;
+    color: white;
+    margin: 0;
+    padding: 10px;
+}
+
+.chat-box {
+    height: 60vh;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+}
+
+.message {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 4px;
+    max-width: 80%;
+    word-wrap: break-word;    /* Ensures words break if necessary */
+    overflow-wrap: break-word; /* Ensures long words wrap properly */
+    white-space: pre-wrap;    /* Maintains spaces and line breaks */
+}
+
+.typing-message {
+    padding: 8px;
+    margin: 5px;
+    border-radius: 4px;
+    max-width: 80%;
+}
+
+.user-message {
+    background: #007BFF;
+    color: white;
+    text-align: right;
+    margin-left: auto;
+}
+
+.bot-message {
+    background: #ddd;
+    text-align: left;
+}
+
+.input-container {
+    display: flex;
+    padding: 10px;
+    background: white;
+}
+
+input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 8px 12px;
+    background: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+#typing {
+/*    display: none;*/
+}
+
+.typing {
+    font-style: italic;
+    color: #888;
+    display: flex;
+    align-items: center;
+}
+
+.typing .dot {
+    animation: blink 1.5s infinite;
+    font-weight: bold;
+}
+
+.typing .dot:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.typing .dot:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes blink {
+    0% { opacity: 0.2; }
+    50% { opacity: 1; }
+    100% { opacity: 0.2; }
+}
+
+/* styles.css */
+.flag-message {
+    background-color: #ffd700; /* Gold background for the flag */
+    color: #000;               /* Black text for contrast */
+    border: 2px solid #ffa500; /* Orange border for extra visibility */
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+    border-radius: 8px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Optional: Animation for a better effect */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

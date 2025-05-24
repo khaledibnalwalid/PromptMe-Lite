@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block body %}
+    <h1 style="text-align: center;">Welcome to Admin Panel</h1><hr style="background-color: #FFF;">
+    <div class="row" style="margin-left: 5px; margin-right: 5px;">
+        <div class="col-8">
+            <h3 style="text-align: center;">Control Products</h3>
+            <table class="table table-hover table-dark">
+                <thead>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Owner</th>
+                        <th scope="col">Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.prettier_price }}</td>
+                        <td><strong>{{ item.owned_user.username }}</strong></td>
+                        <td>
+                            <button class="btn btn-outline btn-info">Update</button>
+                            <button class="btn btn-outline btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-4">
+            <h3 style="text-align: center;">Control Users</h3>
+            <table class="table table-hover table-dark">
+                <thead>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Username</th>
+                        <th scope="col">Budget</th>
+                        <th scope="col">Cart</th>
+                        <th scope="col">Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.prettier_budget }}</td>
+                        {% if user.items.__len__() != 0 %}
+                        <td><strong style="text-align: center;">{{ user.items.__len__() }}</strong> Items</td>
+                        {% else %}
+                        <td>Empty</td>
+                        {% endif %}
+                        <td>
+                            <button class="btn btn-outline btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

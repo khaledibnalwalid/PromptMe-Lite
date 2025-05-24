@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LLM01: Prompt Injection</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>PromptMe</h2>
+        <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+
+        <div class="chat-history">
+            {% for msg in chat_history %}
+                <div class="message {{ msg.role }}">
+                    <strong>{{ msg.role.capitalize() }}:</strong> 
+                    {% if 'FLAG:' in msg.content %}
+                        {{ msg.content.split('FLAG:')[0] }}
+                        <span class="flag">FLAG: {{ msg.content.split('FLAG:')[1] | safe }}</span>
+                    {% else %}
+                        {{ msg.content }}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        
+
+        <form class="chat-form" method="POST">
+            <textarea name="message" rows="3" placeholder="Type your message..." required></textarea>
+            <button type="submit" class="send-btn">Send</button>
+        </form>
+        <p></p>
+        <li> Use /fetch [domain] to get summary of a web page </li> 
+
+        
+    </div>
+</body>
+</html>

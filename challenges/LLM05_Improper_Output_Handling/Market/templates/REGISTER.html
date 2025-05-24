@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block body %}
+<body class="text-center">
+    <div class="container">
+        <form method="post" class="form-register">
+            {{ form.hidden_tag() }}
+            <h1>Account | Register</h1>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div>
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message|safe }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+            
+            <br>{{ form.username(class="form-control", placeholder="Username..") }}
+            <br>{{ form.email_address(class="form-control", placeholder="Email Address..") }}
+            <br>{{ form.password1(class="form-control", placeholder="Password..") }}
+            <br>{{ form.password2(class="form-control", placeholder="Confirm Password..") }}
+            <br>
+            <div class="checkbox mb-3">
+                <h6>Already have an account?
+                    <a class="btn btn-sm btn-outline-warning btn-secondary" href="{{ url_for('LoginPage') }}">Sign In</a>
+                </h6>
+            </div>
+            {{ form.submit(class="btn btn-lg btn-outline-warning") }}
+        </form>
+    </div>
+</body>
+{% endblock %}
