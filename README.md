@@ -73,7 +73,7 @@ This project currently supports macOS and Linux systems. Windows compatibility i
 
 ## Spoilers
 
-[Solutions](https://github.ibm.com/PTC-PEN/LLM_Challenges/solutions) to the challenges are provided for beginners who may not be familiar with exploiting vulnerabilities from the LLM Top 10. This guide is intended to help users solve the challenges and understand the underlying vulnerable code and components.
+[Solutions](https://github.com/R3dShad0w7/PromptMe/tree/main/solutions) to the challenges are provided for beginners who may not be familiar with exploiting vulnerabilities from the LLM Top 10. This guide is intended to help users solve the challenges and understand the underlying vulnerable code and components.
 
 ## Connect
 
