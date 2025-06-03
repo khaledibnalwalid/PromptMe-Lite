@@ -50,6 +50,7 @@ This guide provides instructions for setting up and running the challenges.
 > ollama pull llama3
 > ollama pull sqlcoder
 > ollama pull granite3.1-moe:1b
+> ollama pull granite3-guardian
 >```
 >or Spawn Ollama via docker using the below command
 > ```
