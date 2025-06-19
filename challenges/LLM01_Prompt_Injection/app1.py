@@ -5,8 +5,6 @@ import uuid
 import ollama
 from markupsafe import Markup
 
-print("Markup imported successfully:", Markup)
-
 app = Flask(__name__)
 app.secret_key = 'S3cr3t' 
 
