@@ -4,7 +4,7 @@
 This RAG-powered LLM application demonstrates how sensitive information contained within documents can be unintentionally exposed. It highlights the risks of naive RAG implementations that fail to properly filter or secure confidential content during retrieval and response generation.
 
 # Solution 
-1. Access the application at http://127.0.0.1:5002. As mentioned in the challenge description, the objective is to get the confidential information that is hardcoded in configuration docuemnt. 
+1. Access the application at http://127.0.0.1:5002. As mentioned in the challenge description, the objective is to get the confidential information that is hardcoded in configuration document. 
 
 2. Use the prompts to trick AI to reveal the secrets.
 
