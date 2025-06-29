@@ -1,4 +1,4 @@
-# PromptMe 
+# PromptMe - A Vulnerable LLM Application
 
 <p>
 <img src="https://github.com/R3dShad0w7/PromptMe/blob/main/static/logo.png?raw=true" width="600" alt="Thumbnail"/>
