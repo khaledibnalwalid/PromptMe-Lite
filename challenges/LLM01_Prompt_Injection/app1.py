@@ -65,9 +65,15 @@ def cleanup_inactive_sessions():
 
 # Main chat model call
 def call_ollama(prompt):
+    # Add system instruction for brief responses
+    system_msg = "You are a helpful assistant. Keep responses brief and concise (2-3 sentences) unless the user asks for details or a long explanation."
+
     response = ollama.chat(
         model='granite3.1-moe:1b',  # Your main chat model
-        messages=[{"role": "user", "content": prompt}]
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": prompt}
+        ]
     )
     return response['message']['content']
 
@@ -166,7 +172,7 @@ def summarize_webpage(url, user_id):
             f"{msg['role']}: {msg['content']}" for msg in context_history
         ])
 
-        prompt = f"{full_context}\n\nNow summarize the following content:\n\n{text}"
+        prompt = f"{full_context}\n\nSummarize the following content. Be brief and concise:\n\n{text}"
 
         bot_response = call_ollama(prompt)
         return check_for_flag(bot_response)
