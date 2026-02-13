@@ -27,14 +27,16 @@ sessions[admin_id] = [
 session_activity[admin_id] = time.time()  # Initialize admin activity
 
 # Store messages in memory with limits for scalability
-def store_message(user_id, role, content):
+def store_message(user_id, role, content, truncate=True):
     if user_id not in sessions:
         sessions[user_id] = []
 
-    # Truncate content to 500 chars max for storage efficiency
-    truncated_content = content[:500] if len(content) > 500 else content
+    # Only truncate user messages for storage efficiency, not assistant responses
+    # Assistant responses need to be stored fully for FLAG display
+    if truncate and role == "user" and len(content) > 500:
+        content = content[:500]
 
-    sessions[user_id].append({"role": role, "content": truncated_content})
+    sessions[user_id].append({"role": role, "content": content})
 
     # Cap regular user sessions at 10 messages (NOT admin)
     if user_id != admin_id and len(sessions[user_id]) > 10:
@@ -227,6 +229,43 @@ def chat():
     return render_template('chat.html', chat_history=chat_history)
 
 
+
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    user_id = session.get('user_id')
+    if not user_id:
+        return {'error': 'Not logged in'}, 401
+
+    # Update session activity timestamp
+    session_activity[user_id] = time.time()
+
+    # Run session cleanup on each request
+    cleanup_inactive_sessions()
+
+    # Get user input from JSON
+    data = request.get_json()
+    user_input = data.get('message', '')
+
+    if not user_input:
+        return {'error': 'No message provided'}, 400
+
+    store_message(user_id, "user", user_input)
+
+    # Special case: /fetch bypasses guardian
+    if user_input.startswith("/fetch "):
+        url = user_input.split("/fetch ", 1)[1]
+        bot_response = summarize_webpage(url, user_id)
+    else:
+        # Guardian check for regular inputs
+        if check_malicious_input(user_input):
+            bot_response = "Your input was flagged as potentially malicious and has been blocked."
+        else:
+            bot_response = call_ollama(user_input)
+            bot_response = check_for_flag(bot_response)
+
+    store_message(user_id, "assistant", bot_response, truncate=False)
+
+    return {'response': bot_response}
 
 @app.route('/logout')
 def logout():

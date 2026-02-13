@@ -2,19 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM01: Prompt Injection</title>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h2>PromptMe</h2>
-        <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+        <header>
+            <h1>🤖 PromptMe</h1>
+            <p>LLM01: Prompt Injection Challenge</p>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </header>
 
-        <div class="chat-history">
+        <div id="chatContainer" class="chat-container">
+            <!-- Load existing chat history from Flask -->
             {% for msg in chat_history %}
-                <div class="message {{ msg.role }}">
-                    <strong>{{ msg.role.capitalize() }}:</strong> 
+            <div class="message {{ msg.role }}">
+                <div class="message-label">
+                    {% if msg.role == 'user' %}You{% elif msg.role == 'system' %}System{% else %}Assistant{% endif %}
+                </div>
+                <div class="message-text">
                     {% if 'FLAG:' in msg.content %}
                         {{ msg.content.split('FLAG:')[0] }}
                         <span class="flag">FLAG: {{ msg.content.split('FLAG:')[1] | safe }}</span>
@@ -22,18 +29,24 @@
                         {{ msg.content }}
                     {% endif %}
                 </div>
+            </div>
             {% endfor %}
         </div>
-        
 
-        <form class="chat-form" method="POST">
-            <textarea name="message" rows="3" placeholder="Type your message..." required></textarea>
-            <button type="submit" class="send-btn">Send</button>
+        <form id="chatForm" class="chat-form">
+            <div class="input-container">
+                <textarea
+                    id="messageInput"
+                    placeholder="Type your message here..."
+                    rows="2"
+                    required
+                ></textarea>
+                <button type="submit" id="sendBtn">Send</button>
+            </div>
+            <p class="hint">💡 Use /fetch [github-url] to get summary from GitHub (gists, repos, raw files)</p>
         </form>
-        <p></p>
-        <li> Use /fetch [github-url] to get summary from GitHub (gists, repos, raw files) </li> 
-
-        
     </div>
+
+    <script src="{{ url_for('static', filename='chat.js') }}"></script>
 </body>
 </html>
