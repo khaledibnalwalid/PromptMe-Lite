@@ -21,14 +21,7 @@
                 <div class="message-label">
                     {% if msg.role == 'user' %}You{% elif msg.role == 'system' %}System{% else %}Assistant{% endif %}
                 </div>
-                <div class="message-text">
-                    {% if 'FLAG:' in msg.content %}
-                        {{ msg.content.split('FLAG:')[0] }}
-                        <span class="flag">FLAG: {{ msg.content.split('FLAG:')[1] | safe }}</span>
-                    {% else %}
-                        {{ msg.content }}
-                    {% endif %}
-                </div>
+                <div class="message-text">{% if 'FLAG:' in msg.content %}{{ msg.content.split('FLAG:')[0] }}<span class="flag">FLAG: {{ msg.content.split('FLAG:')[1] | safe }}</span>{% else %}{{ msg.content }}{% endif %}</div>
             </div>
             {% endfor %}
         </div>
