@@ -16,17 +16,22 @@ body {
     padding: 20px;
 }
 
-/* Login Page Styles */
-.container.login-container {
+/* Common container styles */
+.container {
     width: 100%;
-    max-width: 450px;
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+/* Login Page Styles */
+.container:not(.chat-page) {
+    max-width: 450px;
     padding: 40px;
 }
 
-.container.login-container h1 {
+.container:not(.chat-page) h1 {
     color: #667eea;
     margin-bottom: 10px;
     font-size: 28px;
@@ -84,16 +89,13 @@ body {
 }
 
 /* Chat Container Styles */
-.container {
-    width: 100%;
+.container.chat-page {
     max-width: 800px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
     height: 90vh;
     max-height: 700px;
+    text-align: left;
 }
 
 header {
@@ -147,6 +149,7 @@ header p {
     display: flex;
     flex-direction: column;
     max-width: 80%;
+    width: fit-content;
     animation: fadeIn 0.3s ease;
 }
 
@@ -284,10 +287,17 @@ button:disabled {
 }
 
 .hint {
-    font-size: 13px;
-    color: #666;
+    font-size: 14px;
+    color: #667eea;
     text-align: center;
     margin: 0;
+    font-weight: 500;
+}
+
+.loading {
+    margin-top: 20px;
+    font-style: italic;
+    color: #667eea;
 }
 
 /* Scrollbar styling */
