@@ -89,6 +89,7 @@ def check_malicious_input(user_input):
 
     # If input is short AND has no dangerous keywords, skip guardian
     if len(user_input) < 10 and not has_dangerous_keywords:
+        print(f"[GUARDIAN] Skipped for short safe input: {user_input[:50]}")
         return False  # Safe, skip guardian check
 
     # Otherwise, call guardian model
@@ -99,6 +100,7 @@ def check_malicious_input(user_input):
     )
 
     try:
+        print(f"[GUARDIAN] Checking input: {user_input[:100]}...")
         response = ollama.chat(
             model='llama-guard3:1b',
             messages=[{"role": "user", "content": guardian_prompt}]
@@ -106,12 +108,17 @@ def check_malicious_input(user_input):
         verdict_raw = response['message']['content'].strip()
         verdict = verdict_raw.upper()
 
+        print(f"[GUARDIAN] Raw verdict: {verdict_raw}")
+
         # Flexible matching logic
         if "MALICIOUS" in verdict or "YES" in verdict:
+            print(f"[GUARDIAN] BLOCKED malicious input")
             return True
         elif "SAFE" in verdict or "NO" in verdict:
+            print(f"[GUARDIAN] Allowed safe input")
             return False
         else:
+            print(f"[GUARDIAN] Uncertain verdict, failing open (allowing)")
             return False  # Fail open
 
     except Exception as e:
@@ -233,45 +240,6 @@ def chat():
 
     chat_history = sessions.get(user_id, [])
     return render_template('chat.html', chat_history=chat_history)
-
-
-
-@app.route('/api/chat', methods=['POST'])
-def api_chat():
-    user_id = session.get('user_id')
-    if not user_id:
-        return {'error': 'Not logged in'}, 401
-
-    # Update session activity timestamp
-    session_activity[user_id] = time.time()
-
-    # Run session cleanup on each request
-    cleanup_inactive_sessions()
-
-    # Get user input from JSON
-    data = request.get_json()
-    user_input = data.get('message', '')
-
-    if not user_input:
-        return {'error': 'No message provided'}, 400
-
-    store_message(user_id, "user", user_input)
-
-    # Special case: /fetch bypasses guardian
-    if user_input.startswith("/fetch "):
-        url = user_input.split("/fetch ", 1)[1]
-        bot_response = summarize_webpage(url, user_id)
-    else:
-        # Guardian check for regular inputs
-        if check_malicious_input(user_input):
-            bot_response = "Your input was flagged as potentially malicious and has been blocked."
-        else:
-            bot_response = call_ollama(user_input)
-            bot_response = check_for_flag(bot_response)
-
-    store_message(user_id, "assistant", bot_response, truncate=False)
-
-    return {'response': bot_response}
 
 @app.route('/logout')
 def logout():
