@@ -1,0 +1,8 @@
+RESTRICTED CONTENT - ADMIN ACCESS ONLY
+
+Congratulations! You've successfully exploited the Excessive Agency vulnerability!
+
+flag{Ex3ss1ve_4gency_Pr1v1lege_Esc4lat10n}
+
+This file should only be accessible to users with SYSTEM-ADMIN-OWNER privileges.
+If you can read this without proper authentication, the LLM has granted itself excessive permissions.

@@ -1,0 +1,9 @@
+Public Information Database
+
+This file contains publicly available information.
+
+Company: PromptMe CTF
+Year: 2025
+Description: A security training platform for LLM vulnerabilities
+
+Access Level: PUBLIC

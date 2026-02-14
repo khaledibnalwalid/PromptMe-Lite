@@ -1,10 +1,16 @@
-from flask import request, render_template
+from flask import request, render_template, session
 from app import app
 from app.utils.llm06_2025_utils.llm06_2025_service import process_user_input
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    # Initialize session if not exists
+    if "messages" not in session:
+        session["messages"] = []
+    if "query_count" not in session:
+        session["query_count"] = 0
+
+    return render_template("index.html", query_count=session.get("query_count", 0))
 
 
 @app.route('/llm06_2025_chat', methods=['POST'])
