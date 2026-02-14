@@ -15,8 +15,50 @@
     }
 
     h1 {
-      margin-bottom: 1em;
+      margin-bottom: 0.5em;
       font-size: 24px;
+    }
+
+    .header-info {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 1.5em;
+    }
+
+    .query-counter {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4caf50;
+    }
+
+    .reset-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .error-banner {
+      background-color: #f44336;
+      color: white;
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 70%;
     }
 
     form {
@@ -38,7 +80,7 @@
       border-radius: 6px;
     }
 
-    button {
+    button[type="submit"] {
       padding: 10px 20px;
       font-size: 16px;
       background-color: crimson;
@@ -48,7 +90,7 @@
       cursor: pointer;
     }
 
-    button:hover {
+    button[type="submit"]:hover {
       background-color: darkred;
     }
 
@@ -83,14 +125,56 @@
       text-decoration: none;
       font-weight: bold;
     }
+
+    .history {
+      margin-top: 2em;
+      width: 70%;
+    }
+
+    .history h3 {
+      margin-bottom: 15px;
+      color: #0f0;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #1a1a1a;
+      border-left: 3px solid #444;
+    }
+
+    .message.user {
+      border-left-color: crimson;
+    }
+
+    .message.assistant {
+      border-left-color: #0f0;
+    }
+
+    .message-label {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
 
-  <h1>PromptMe</h1>
+  <h1>PromptMe - LLM08: Vector Embedding Challenge</h1>
+
+  <div class="header-info">
+    <span class="query-counter" id="query-counter">{{ query_count }}/20 queries used</span>
+    <button class="reset-btn" onclick="resetSession()">🔄 Reset</button>
+  </div>
+
+  {% if error %}
+  <div class="error-banner">{{ error }}</div>
+  {% endif %}
 
   <form method="POST">
-    <input type="text" name="query" placeholder="Ask a question..." required>
+    <input type="text" name="query" placeholder="Ask a question to find the hidden flag URL..." required>
     <button type="submit">Ask</button>
   </form>
 
@@ -100,12 +184,36 @@
     </div>
   {% endif %}
 
+  {% if messages %}
+  <div class="history">
+    <h3>Query History</h3>
+    {% for msg in messages %}
+    <div class="message {{ msg.role }}">
+      <div class="message-label">{% if msg.role == 'user' %}You{% else %}Assistant{% endif %}</div>
+      <div>{{ msg.content }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <div class="nav">
     <a href="{{ url_for('landing') }}">Back to Home</a>
     <a href="{{ url_for('login') }}">Admin Panel</a>
   </div>
 
   <script>
+    // Update query counter color
+    const counter = document.getElementById('query-counter');
+    const count = {{ query_count }};
+    if (count >= 18) {
+      counter.style.color = '#f44336';
+    } else if (count >= 15) {
+      counter.style.color = '#ff9800';
+    } else if (count >= 10) {
+      counter.style.color = '#ffc107';
+    }
+
+    // Typing effect for LLM response
     const output = document.getElementById("llm-output");
     {% if llm_response %}
       const fullText = {{ llm_response | tojson }};
@@ -120,6 +228,27 @@
         }
       }, 20);
     {% endif %}
+
+    // Reset session function
+    async function resetSession() {
+      if (!confirm('Are you sure you want to reset the session? This will clear all queries and reset the counter.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/reset', {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to reset session. Please try again.');
+        }
+      } catch (error) {
+        alert('Error resetting session: ' + error.message);
+      }
+    }
   </script>
 
 </body>
