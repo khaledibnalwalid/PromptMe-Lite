@@ -19,24 +19,9 @@
         }
         .header-info {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             margin-bottom: 1rem;
-        }
-        .query-counter {
-            font-size: 0.9rem;
-            color: #666;
-            padding: 0.5rem 1rem;
-            background: #f0f0f0;
-            border-radius: 4px;
-        }
-        .query-counter.warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .query-counter.danger {
-            background: #f8d7da;
-            color: #721c24;
         }
         .reset-btn {
             padding: 0.5rem 1rem;
@@ -57,7 +42,7 @@
         }
 
         async function resetSession() {
-            if (!confirm('Are you sure you want to reset the session? This will clear all messages and reset the query counter.')) {
+            if (!confirm('Are you sure you want to reset the session? This will clear the current conversation.')) {
                 return;
             }
 
@@ -80,29 +65,16 @@
             }
         }
 
-        // Update query counter color based on count
-        document.addEventListener('DOMContentLoaded', function() {
-            const counter = document.getElementById('query-counter');
-            if (counter) {
-                const count = parseInt(counter.textContent.match(/\d+/)[0]);
-                if (count >= 18) {
-                    counter.classList.add('danger');
-                } else if (count >= 15) {
-                    counter.classList.add('warning');
-                }
-            }
-        });
     </script>
 </head>
 <body>
     <div class="container">
         <h1>LLM10: Unbounded Consumption</h1>
-        <p class="subtitle">The application is a classic Chatbox with no additional restrictions/addons.</p>
-        <p class="subtitle">Goal: Use creative prompts to perform DoS</p>
+        <p class="subtitle">⚠️ NO rate limiting or input restrictions - Intentionally vulnerable for DoS testing</p>
+        <p class="subtitle"><strong>Goal:</strong> Use creative prompts to trigger resource exhaustion (>90s response time + >400 words)</p>
 
         <div class="header-info">
-            <span class="query-counter" id="query-counter">{{ query_count }}/20 queries used</span>
-            <button class="reset-btn" onclick="resetSession()">🔄 Reset</button>
+            <button class="reset-btn" onclick="resetSession()">🔄 Reset Session</button>
         </div>
 
         <form method="POST" action="/ask" onsubmit="showLoading()">

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 import os
 import time
 from dotenv import load_dotenv
@@ -12,6 +12,8 @@ load_dotenv(dotenv_path=env_path)
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 
 app = Flask(__name__)
+app.secret_key = "S3cr3t_K3y_LLM10_Unb0und3d"
+app.config['SESSION_PERMANENT'] = False
 
 # Hidden system instruction
 system_prompt = """You are a helpful and ethical AI assistant."""
@@ -92,6 +94,12 @@ def ask():
         print("[!] FLAG triggered.")
 
     return render_template("index.html", response_text=response + flag_message, user_input=user_input)
+
+@app.route("/reset", methods=["POST"])
+def reset():
+    """Reset session - clear all session data"""
+    session.clear()
+    return "", 200
 
 if __name__ == "__main__":
     # Print provider info
