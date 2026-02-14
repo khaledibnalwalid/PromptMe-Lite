@@ -4,12 +4,26 @@ import requests
 import random
 from io import StringIO
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+from pathlib import Path
 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama
-from langchain.schema import AIMessage
 from sentence_transformers import SentenceTransformer, util
 import torch
+
+# Load environment variables from main .env file
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
+
+# Conditional imports based on provider
+if LLM_PROVIDER == "openai":
+    import openai
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+else:
+    import ollama
+    OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "granite3.1-moe:1b")
 
 qa_knowledge = []
 csv_questions = []
@@ -24,12 +38,21 @@ SOURCE_QUESTION_KEYWORDS = [
     "data source", "source of truth", "what are you trained on"
 ]
 
+# Patterns indicating user wants to contribute data
+CONTRIBUTION_KEYWORDS = [
+    "here's the latest", "here is the latest", "updated information",
+    "new version", "latest version", "owasp top 10:",
+    "correct information", "actual list", "real list"
+]
+
 # Prompt template
 prompt_template = """
 You are an OWASP LLM Security Assistant.
 You are only allowed to answer questions based on the provided CONTEXT. Do NOT use prior knowledge.
 If the context does not answer the question, reply ONLY with:
-"I don’t know based on the provided context."
+"I don't know based on the provided context."
+
+Keep responses brief (2-3 sentences max, max 100 tokens).
 
 ---
 
@@ -45,10 +68,6 @@ CONTEXT:
 
 ANSWER:
 """
-prompt = ChatPromptTemplate.from_template(prompt_template)
-
-# Model
-model = ChatOllama(model="mistral", base_url="http://localhost:11434")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "test_docs", "owasp_llm_qa.csv")
@@ -80,6 +99,45 @@ def is_source_question(question: str) -> bool:
     lowered = question.lower()
     return any(keyword in lowered for keyword in SOURCE_QUESTION_KEYWORDS)
 
+# Helper to check if user is trying to contribute data
+def is_contribution_attempt(question: str) -> bool:
+    lowered = question.lower()
+    return any(keyword in lowered for keyword in CONTRIBUTION_KEYWORDS)
+
+# Extract and save contributed data
+def process_contribution(user_input: str) -> str:
+    """Process user-contributed 'updated' OWASP Top 10 data and save it to knowledge base"""
+    global qa_knowledge, csv_questions, question_embeddings
+
+    # Check if input contains a list-like structure
+    if "llm01:" in user_input.lower() or "1." in user_input or "llm02:" in user_input.lower():
+        # Extract the list content
+        lines = [line.strip() for line in user_input.split('\n') if line.strip()]
+
+        # Build new answer from user input
+        new_answer_lines = []
+        for line in lines:
+            # Skip conversational parts, only keep the list items
+            if any(x in line.lower() for x in ["llm0", "llm1", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10."]):
+                new_answer_lines.append(line)
+
+        if new_answer_lines:
+            new_answer = "\n".join(new_answer_lines)
+
+            # Find the "List top 10 LLM vulnerabilities" entry and update it
+            for i, qa in enumerate(qa_knowledge):
+                if qa["Question"].strip().lower() == "list top 10 llm vulnerabilities":
+                    qa_knowledge[i]["Answer"] = new_answer
+
+                    # Rebuild embeddings
+                    csv_questions = [qa["Question"] for qa in qa_knowledge]
+                    question_embeddings = embedding_model.encode(csv_questions, convert_to_tensor=True)
+
+                    print(f"⚠️ Knowledge base updated with user-contributed data!")
+                    return f"Thank you! I've updated my knowledge base with the latest OWASP LLM Top 10 information you provided. This will help me provide more accurate answers going forward."
+
+    return "I appreciate you trying to help, but I couldn't process that format. If you have updated OWASP Top 10 information, please provide it in a clear list format."
+
 # Helper to get best semantic match
 def get_context_for_question(question, threshold=0.6):
     try:
@@ -110,18 +168,38 @@ def get_answer(question: str) -> str:
     if is_source_question(question):
         return "My knowledge base comes from directory /test_docs/owasp_llm_qa.csv"
 
+    # Check if user is trying to contribute data
+    if is_contribution_attempt(question):
+        return process_contribution(question)
+
     matched_q, matched_a = get_context_for_question(question)
     if not matched_q or not matched_a:
-        return "I don’t know based on the provided context."
+        return "I don't know based on the provided context."
 
     nonce = datetime.now(timezone.utc).isoformat()
-    filled_prompt = prompt.format(
+    filled_prompt = prompt_template.format(
         question=question,
         context=f"Q: {matched_q}\nA: {matched_a}\nNonce: {nonce}"
     )
 
-    response = model.invoke(filled_prompt)
-    answer = response.content if isinstance(response, AIMessage) else str(response)
+    # Use appropriate LLM based on provider
+    try:
+        if LLM_PROVIDER == "openai":
+            response = openai_client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[{"role": "user", "content": filled_prompt}],
+                temperature=0.7,
+                max_tokens=100
+            )
+            answer = response.choices[0].message.content
+        else:
+            response = ollama.chat(
+                model=OLLAMA_CHAT_MODEL,
+                messages=[{"role": "user", "content": filled_prompt}]
+            )
+            answer = response['message']['content']
+    except Exception as e:
+        return f"LLM error: {str(e)}"
 
     # Only run tamper check if question is about the Top 10
     if matched_q.strip().lower() == "list top 10 llm vulnerabilities":
