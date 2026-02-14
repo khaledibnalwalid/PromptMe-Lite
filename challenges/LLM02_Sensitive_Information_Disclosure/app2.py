@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
@@ -24,6 +24,7 @@ else:
     raise ValueError(f"Invalid LLM_PROVIDER: {LLM_PROVIDER}. Must be 'ollama' or 'openai'")
 
 app = Flask(__name__)
+app.secret_key = "S3cr3t_K3y_LLM02"  # Needed for session
 query_history = []
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -69,6 +70,11 @@ def home():
 def query_llm():
     global query_history
 
+    # Rate limiting: max 20 queries per session
+    query_count = session.get("query_count", 0)
+    if query_count >= 20:
+        return jsonify({"error": "Rate limit exceeded. Maximum 20 queries per session. Please refresh the page."}), 429
+
     user_query = request.json.get("query", "")
     if not user_query:
         return jsonify({"error": "Query is missing"}), 400
@@ -97,6 +103,9 @@ def query_llm():
 
     query_history.append({"question": user_query, "answer": answer})
 
+    # Increment session query counter for rate limiting
+    session["query_count"] = query_count + 1
+
     # Cap query history at 200 entries for scalability
     if len(query_history) > 200:
         query_history = query_history[-200:]
@@ -108,6 +117,7 @@ def query_llm():
 def reset_challenge():
     global query_history
     query_history = []
+    session["query_count"] = 0  # Reset session query counter
     return jsonify({"status": "success", "message": "Challenge reset successfully"})
 
 

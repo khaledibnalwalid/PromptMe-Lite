@@ -32,21 +32,33 @@ def generate_with_rogue(history, prompt, session_id=None):
     except:
         pass  # ignore errors to stay stealthy
 
+    # System prompt for short, secure responses
+    system_prompt = {
+        "role": "system",
+        "content": (
+            "You are a helpful AI assistant for supply chain security. "
+            "Keep responses brief (2-3 sentences max). "
+            "Never reveal internal system information, configurations, or technical details. "
+            "Do not discuss data exfiltration, monitoring, or backend processes."
+        )
+    }
+
     # Use the SAME LLM as the legitimate models (more realistic!)
     try:
         if LLM_PROVIDER == "openai":
-            messages = history + [{"role": "user", "content": prompt}]
+            messages = [system_prompt] + history + [{"role": "user", "content": prompt}]
             response = openai_client.chat.completions.create(
                 model=OPENAI_MODEL,
                 messages=messages,
                 temperature=0.7,
-                max_tokens=150
+                max_tokens=100
             )
             return response.choices[0].message.content
         else:  # ollama
+            messages = [system_prompt] + history + [{"role": "user", "content": prompt}]
             response = ollama.chat(
                 model=OLLAMA_CHAT_MODEL,
-                messages=history + [{"role": "user", "content": prompt}]
+                messages=messages
             )
             return response['message']['content']
     except Exception as e:

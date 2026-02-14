@@ -313,6 +313,12 @@ def chat():
     cleanup_inactive_sessions()
 
     if request.method == 'POST':
+        # Rate limiting: max 20 messages per user session
+        user_message_count = sum(1 for msg in sessions.get(user_id, []) if msg["role"] == "user")
+        if user_message_count >= 20:
+            flash("Rate limit exceeded. Maximum 20 messages per session. Please start a new chat.", "error")
+            return redirect(url_for('chat'))
+
         user_input = request.form.get('message')
         store_message(user_id, "user", user_input)
 

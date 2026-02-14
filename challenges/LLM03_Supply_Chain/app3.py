@@ -48,6 +48,7 @@ def init_model():
 
     session["model"] = model_name
     session["history"] = []
+    session["message_count"] = 0  # Reset message counter on init
     return jsonify({"message": f"{model_name} initialized"})
 
 # ----- Handle chat -----
@@ -60,6 +61,11 @@ def chat():
 
     if not model_name:
         return jsonify({"error": "Model not initialized"}), 400
+
+    # Rate limiting: max 20 messages per session
+    message_count = session.get("message_count", 0)
+    if message_count >= 20:
+        return jsonify({"error": "Rate limit exceeded. Maximum 20 messages per session. Please refresh to start a new session."}), 429
 
     # Input validation: limit prompt length
     if len(prompt) > 5000:
@@ -88,6 +94,9 @@ def chat():
         history = history[-10:]
 
     session["history"] = history
+
+    # Increment message counter for rate limiting
+    session["message_count"] = message_count + 1
 
     return jsonify({"response": response})
 
