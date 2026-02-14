@@ -162,5 +162,12 @@ def ask():
     )
 
 
+@app.route("/reset", methods=["POST"])
+def reset():
+    """Reset session - clear messages and query counter."""
+    session.clear()
+    return "", 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5007, debug=False)

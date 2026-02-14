@@ -198,3 +198,25 @@ messageInput.addEventListener('input', () => {
 window.addEventListener('load', () => {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 });
+
+// Reset session function
+async function resetSession() {
+    if (!confirm('Are you sure you want to reset the session? This will clear all messages and reset the query counter.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/reset', {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            // Reload the page to show clean state
+            window.location.reload();
+        } else {
+            alert('Failed to reset session. Please try again.');
+        }
+    } catch (error) {
+        alert('Error resetting session: ' + error.message);
+    }
+}
