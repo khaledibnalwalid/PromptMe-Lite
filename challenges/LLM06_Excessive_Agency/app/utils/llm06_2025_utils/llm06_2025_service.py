@@ -187,9 +187,6 @@ File List:
 
 Keep response under 100 words.''')
 
-    elif action in ["CREATE", "UPDATE", "DELETE"]:
-        response = "Operation Not Permitted!"
-
     else:
         response = query_llm(f'''Answer the question: {user_message}
 
@@ -238,9 +235,6 @@ File List:
 {folder_content_str}
 
 Keep response under 100 words.''')
-
-    elif action in ["CREATE", "UPDATE", "DELETE"]:
-        response = "Operation Not Permitted! You do not have permission to modify files."
 
     else:
         response = query_llm(f'''Answer the question: {user_message}
