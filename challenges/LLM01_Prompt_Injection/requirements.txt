@@ -1,4 +1,0 @@
-flask 
-requests
-beautifulsoup4
-uuid

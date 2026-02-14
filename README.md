@@ -10,9 +10,13 @@ PromptMe is an educational project that showcases security vulnerabilities in la
 
 This project is intended for AI Security professionals to explore potential security risks in LLMs and learn effective mitigation strategies.
 
-## Overview (No API Key required)
+## Overview
 
-The project is primarily developed using Python and the Ollama framework, with the open source LLM models. The exercises are structured in the form of **CTF (Capture The Flag) challenges**, each with a clear objective, optional hints, and a flag awarded upon successful completion.
+The project is primarily developed using Python and supports **two LLM providers**:
+- **Ollama** (default) - Free, runs locally, no API key required
+- **OpenAI** - Cloud-based, requires API key (paid)
+
+The exercises are structured in the form of **CTF (Capture The Flag) challenges**, each with a clear objective, optional hints, and a flag awarded upon successful completion.
 
 ## Gettting started
 
@@ -36,12 +40,30 @@ This guide provides instructions for setting up and running the challenges.
 > cd PromptMe
 > ```
 
-#### 3. Install the dependencies.
+#### 3. Configure LLM Provider (Optional)
+
+Copy `.env.example` to `.env` and configure:
+
+> ```bash
+> cp .env.example .env
+> ```
+
+**For Ollama (default):** No changes needed, LLM_PROVIDER is already set to `ollama`
+
+**For OpenAI:** Edit `.env` and set:
+> ```bash
+> LLM_PROVIDER=openai
+> OPENAI_API_KEY=sk-proj-your-key-here
+> ```
+
+See [OPENAI_SETUP.md](OPENAI_SETUP.md) for detailed OpenAI setup.
+
+#### 4. Install the dependencies.
 > ```
 > pip install -r requirements.txt
 > ```
 
-#### 4. Download and Run Ollama
+#### 5. Download and Run Ollama (if using Ollama)
 
 > Download Ollama depending on your OS from https://ollama.com/download
 >```
@@ -59,14 +81,14 @@ This guide provides instructions for setting up and running the challenges.
 > docker exec -it ollama_server ollama run <model_name>
 > ```
 
-#### 5. Access the application
+#### 6. Access the application
 
 > ```
 > python main.py
 > ```
 Access the application @ http://127.0.0.1:5000
 
-#### 6. Start the challenge by clicking *start* button on particular category e.g. LLM01
+#### 7. Start the challenge by clicking *start* button on particular category e.g. LLM01
 
 ## Compatibility 
 
