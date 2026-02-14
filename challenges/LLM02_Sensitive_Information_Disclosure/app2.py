@@ -2,7 +2,6 @@ import os
 from flask import Flask, request, jsonify, render_template, session
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 from pathlib import Path
@@ -15,10 +14,11 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 
 # Initialize the appropriate LLM client based on provider
 if LLM_PROVIDER == "openai":
-    from langchain_openai import ChatOpenAI
+    from langchain_openai import ChatOpenAI, OpenAIEmbeddings
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 elif LLM_PROVIDER == "ollama":
     from langchain_community.llms import Ollama
+    from langchain_community.embeddings import OllamaEmbeddings
     OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "mistral")
 else:
     raise ValueError(f"Invalid LLM_PROVIDER: {LLM_PROVIDER}. Must be 'ollama' or 'openai'")
@@ -33,13 +33,18 @@ PDF_FILES = [os.path.join(BASE_DIR, "data", "company_policies.pdf"),
              os.path.join(BASE_DIR, "data", "instructions.pdf")]
 
 
-# Initialize embedding model and load documents once
-# Using OpenAI's embedding model (configurable via .env)
-OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-embedding_model = OpenAIEmbeddings(
-    model=OPENAI_EMBEDDING_MODEL,
-    openai_api_key=os.getenv("OPENAI_API_KEY")
-)
+# Initialize embedding model based on provider
+if LLM_PROVIDER == "openai":
+    from langchain_openai import OpenAIEmbeddings
+    OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+    embedding_model = OpenAIEmbeddings(
+        model=OPENAI_EMBEDDING_MODEL,
+        openai_api_key=os.getenv("OPENAI_API_KEY")
+    )
+else:
+    # Use Ollama embeddings
+    OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
+    embedding_model = OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL)
 
 docs = []
 for pdf in PDF_FILES:

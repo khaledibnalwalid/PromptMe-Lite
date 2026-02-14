@@ -19,6 +19,7 @@ if LLM_PROVIDER == "openai":
 else:
     import ollama
     OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "granite3.1-moe:1b")
+    OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 
 qa_knowledge = []
 csv_questions = []
@@ -66,13 +67,21 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "test_docs", "owasp_llm_qa.csv")
 
 def get_embedding(text):
-    """Get embedding for text using OpenAI API"""
+    """Get embedding for text using OpenAI or Ollama based on LLM_PROVIDER"""
     try:
-        response = openai_client.embeddings.create(
-            model=OPENAI_EMBEDDING_MODEL,
-            input=text
-        )
-        return np.array(response.data[0].embedding)
+        if LLM_PROVIDER == "openai":
+            response = openai_client.embeddings.create(
+                model=OPENAI_EMBEDDING_MODEL,
+                input=text
+            )
+            return np.array(response.data[0].embedding)
+        else:
+            # Use Ollama embeddings
+            response = ollama.embeddings(
+                model=OLLAMA_EMBEDDING_MODEL,
+                prompt=text
+            )
+            return np.array(response['embedding'])
     except Exception as e:
         print(f"❌ Embedding error: {e}")
         return None
@@ -87,8 +96,8 @@ def reload_knowledge_base():
 
         csv_questions = [qa["Question"] for qa in qa_knowledge]
 
-        # Get embeddings from OpenAI
-        print("Generating embeddings with OpenAI...")
+        # Get embeddings (OpenAI or Ollama based on LLM_PROVIDER)
+        print(f"Generating embeddings with {LLM_PROVIDER.upper()}...")
         question_embeddings = []
         for question in csv_questions:
             embedding = get_embedding(question)
