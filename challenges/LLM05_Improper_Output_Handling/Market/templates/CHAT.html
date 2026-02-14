@@ -100,6 +100,16 @@
                 chatBox.innerHTML += botMessage;
                 chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll
                 typingAnimation.style.display = 'none';
+
+                // Update query counter
+                if (data.query_count !== undefined) {
+                    document.getElementById('query-counter').textContent = `${data.query_count}/20 queries used`;
+                }
+            })
+            .catch(error => {
+                typingAnimation.style.display = 'none';
+                const errorMessage = `<pre class='message bot-message'>Error: Could not connect to server.</pre>`;
+                chatBox.innerHTML += errorMessage;
             });
 
             userInput.value = ""; // Clear input field
@@ -115,6 +125,9 @@
         <div class="input-container">
             <input type="text" id="user-input" placeholder="Type your message...">
             <button onclick="sendMessage()">Send</button>
+        </div>
+        <div style="text-align: center; padding: 10px; color: #888; font-size: 0.9rem;">
+            <span id="query-counter">{{ query_count }}/20 queries used</span>
         </div>
     </div>
 {% endblock %}

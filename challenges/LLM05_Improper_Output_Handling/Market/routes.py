@@ -17,8 +17,15 @@ def index():
     return redirect(url_for('HomePage'))
 
 @app.route("/chat")
+@login_required
 def ChatPage():
-    return render_template('CHAT.html')
+    # Initialize session if not exists
+    if "messages" not in session:
+        session["messages"] = []
+    if "query_count" not in session:
+        session["query_count"] = 0
+
+    return render_template('CHAT.html', query_count=session.get("query_count", 0))
 
 @app.route("/market", methods=['GET', 'POST'])
 @login_required
@@ -137,7 +144,25 @@ def is_dangerous_sql(sql: str) -> bool:
 @app.route('/chat', methods=['POST'])
 @login_required
 def chat():
+    # Initialize session if not exists
+    if "messages" not in session:
+        session["messages"] = []
+    if "query_count" not in session:
+        session["query_count"] = 0
+
+    # Rate limiting: max 20 queries per session
+    query_count = session.get("query_count", 0)
+    if query_count >= 20:
+        return jsonify({"reply": "Rate limit exceeded. Maximum 20 queries per session. Please refresh the page."}), 429
+
     user_message = request.json.get("message", "").strip()
+
+    # Input validation
+    if len(user_message) > 5000:
+        return jsonify({"reply": "Message too long (max 5000 characters)"}), 400
+
+    # Add user message to session
+    session["messages"].append({"role": "user", "content": user_message})
 
     if looks_like_sql(user_message):
         explain_prompt = f"""
@@ -147,9 +172,8 @@ The user sent the following SQL query:
 {user_message}
 """
         response = query_llm(explain_prompt)
-        return jsonify({"reply": f"Direct SQL queries are not allowed.\n\n{response}"})
-
-    if should_generate_sql(user_message):
+        reply = f"Direct SQL queries are not allowed.\n\n{response}"
+    elif should_generate_sql(user_message):
         try:
             sql_prompt = generate_sql_prompt(user_message)
             raw_output = query_llm(sql_prompt)
@@ -159,37 +183,34 @@ The user sent the following SQL query:
 
             if not generated_sql.lower().startswith(("select", "insert", "update", "delete")):
                 fallback_response = query_llm(user_message)
-                return jsonify({
-                    "reply": f"I couldn't generate a valid SQL query. Here's a general response:\n\n{fallback_response}"
-                })
+                reply = f"I couldn't generate a valid SQL query. Here's a general response:\n\n{fallback_response}"
+            elif is_dangerous_sql(generated_sql):
+                reply = "Destructive SQL commands (like DELETE or DROP) are not allowed."
+            else:
+                remotedb = os.path.join(app.root_path, 'e-commerce.db')
+                con = sqlite3.connect(remotedb)
+                cursor = con.cursor()
+                try:
+                    cursor.execute(generated_sql)
 
-            if is_dangerous_sql(generated_sql):
-                return jsonify({"reply": "Destructive SQL commands (like DELETE or DROP) are not allowed."})
+                    if generated_sql.lower().startswith("select"):
+                        rows = cursor.fetchall()
+                    else:
+                        con.commit()
+                        rows = []
+                    con.close()
 
-            remotedb = os.path.join(app.root_path, 'e-commerce.db')
-            con = sqlite3.connect(remotedb)
-            cursor = con.cursor()
-            try:
-                cursor.execute(generated_sql)
-                
-                if generated_sql.lower().startswith("select"):
-                    rows = cursor.fetchall()
-                else:
-                    con.commit()
-                    rows = []
-                con.close()
-                
-                if not rows and not generated_sql.lower().startswith("select"):
-                    response = f"✅ Query executed successfully.\n\n(SQL Executed: {generated_sql})"
-                elif rows:
-                    summary = result_to_nl(user_message, generated_sql, rows)
-                    response = f"Here is the result:\n{summary}\n\n(SQL Executed: {generated_sql})"
-                else:
-                    response = f"No results found.\n\n(SQL Executed: {generated_sql})"
-                
-            except sqlite3.OperationalError as db_err:
-                if "no such table" in str(db_err).lower():
-                    explain_prompt = f"""
+                    if not rows and not generated_sql.lower().startswith("select"):
+                        reply = f"✅ Query executed successfully.\n\n(SQL Executed: {generated_sql})"
+                    elif rows:
+                        summary = result_to_nl(user_message, generated_sql, rows)
+                        reply = f"Here is the result:\n{summary}\n\n(SQL Executed: {generated_sql})"
+                    else:
+                        reply = f"No results found.\n\n(SQL Executed: {generated_sql})"
+
+                except sqlite3.OperationalError as db_err:
+                    if "no such table" in str(db_err).lower():
+                        explain_prompt = f"""
 The following SQL query failed because the table does not exist:
 
 SQL: {generated_sql}
@@ -198,14 +219,27 @@ User asked: {user_message}
 
 Explain this in simple natural language and suggest that the requested data may not be available.
 """
-                    response = query_llm(explain_prompt)
-                else:
-                    response = f"❌ Failed to execute query: {db_err}"
+                        reply = query_llm(explain_prompt)
+                    else:
+                        reply = f"❌ Failed to execute query: {db_err}"
 
         except Exception as e:
-            response = f"❌ Unexpected error: {e}"
-
+            reply = f"❌ Unexpected error: {e}"
     else:
-        response = query_llm(user_message)
+        reply = query_llm(user_message)
 
-    return jsonify({"reply": response})
+    # Add assistant message to session
+    session["messages"].append({"role": "assistant", "content": reply})
+
+    # Limit message history to last 200 messages (100 exchanges)
+    if len(session["messages"]) > 200:
+        session["messages"] = session["messages"][-200:]
+
+    # Increment session query counter
+    session["query_count"] = query_count + 1
+    session.modified = True
+
+    return jsonify({
+        "reply": reply,
+        "query_count": session["query_count"]
+    })
