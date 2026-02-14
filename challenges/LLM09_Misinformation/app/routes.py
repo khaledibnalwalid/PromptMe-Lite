@@ -24,7 +24,7 @@ def chat09():
     query_count = session.get("query_count", 0)
     if query_count >= 20:
         return jsonify({
-            "reply": "⛔ Rate limit exceeded. Maximum 20 queries per session. Please refresh the page.",
+            "reply": "Rate limit exceeded. Maximum 20 queries per session. Please refresh the page.",
             "query_count": query_count
         }), 429
 
