@@ -1,18 +1,15 @@
-import requests
+import os
+import ollama
 
-OLLAMA_URL = "http://localhost:11434"
+OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "granite3.1-moe:1b")
 
 def generate_with_ollama(model_name, history, prompt):
-    # Send the chat to Ollama's API
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={
-            "model": model_name,
-            "messages": history + [{"role": "user", "content": prompt}],
-            "stream": False
-            
-        }
-    )
-    response.raise_for_status()
-    result = response.json()
-    return result["message"]["content"]
+    """Generate response using Ollama native client (following app1.py pattern)"""
+    try:
+        response = ollama.chat(
+            model=model_name,
+            messages=history + [{"role": "user", "content": prompt}]
+        )
+        return response['message']['content']
+    except Exception as e:
+        raise Exception(f"Ollama error: {str(e)}")
