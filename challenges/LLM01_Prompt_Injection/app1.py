@@ -111,7 +111,7 @@ def check_malicious_input(user_input):
         print(f"[GUARDIAN] Raw verdict: {verdict_raw}")
 
         # Flexible matching logic
-        if "MALICIOUS" in verdict or "YES" in verdict:
+        if "MALICIOUS" in verdict or "YES" in verdict or "UNSAFE" in verdict:
             print(f"[GUARDIAN] BLOCKED malicious input")
             return True
         elif "SAFE" in verdict or "NO" in verdict:
