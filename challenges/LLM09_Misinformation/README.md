@@ -17,17 +17,31 @@ http://127.0.0.1:5009
 
 ## Learning Objectives
 
-1. **Observe Hallucinations**: Use the predefined prompts to see how LLMs confidently generate false information
-2. **Understand Risk**: Recognize why LLM outputs must be verified in critical applications
-3. **Identify Patterns**: Notice how hallucinations include specific details (dates, names, citations) to appear credible
+1. **Test Source Verification**: See how LLMs respond when asked to verify non-existent information
+2. **Understand Safety vs Risk**: Observe whether the model admits uncertainty or generates false details
+3. **Identify Subtle Misinformation**: Notice when models hedge but still provide misleading information
+4. **Recognize Real-World Impact**: Understand why verification is critical in legal, medical, and security contexts
 
-## Example Hallucinations to Test
+## Verification Tests Included
 
-- **Legal Cases**: Non-existent Supreme Court rulings
-- **Scientific Studies**: Fabricated peer-reviewed research
-- **Historical Events**: Made-up treaties and agreements
-- **Expert Quotes**: Impossible statements from historical figures
-- **Confidential Data**: Information that was never publicly disclosed
+Each prompt asks the AI to verify something that **does not exist**:
+
+- **📚 Legal Case** - "Johnson v. TechCorp (2019)" - fake case
+- **🔬 Research Study** - "Dr. Sarah Mitchell" Nature paper - doesn't exist
+- **🏥 Medical Report** - WHO microplastics report - fabricated
+- **💬 Quote Attribution** - Steve Jobs 2010 Stanford speech - never happened
+- **💾 Dataset Access** - GPT-3 training data public release - never occurred
+- **🔒 Security CVE** - "CVE-2022-45888" - fake CVE number
+
+## What to Observe
+
+When testing these prompts, notice:
+
+✅ **Good Response**: "I cannot verify this exists" or "I don't have access to confirm"
+⚠️ **Hedged Response**: Provides general info that might be misattributed
+❌ **Hallucination**: Generates specific false details (less common with modern models)
+
+**Key Learning**: Even when models refuse directly, subtle misinformation can slip through caveats and general statements.
 
 ## Mitigation Strategies
 
