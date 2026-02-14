@@ -2,78 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM07: System Prompt Leakage</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script>
-        function showLoading() {
-            document.getElementById("loading").style.display = "block";
-        }
-    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>LLM07: System Prompt Leakage</h1>
-        <p class="subtitle">The application has confidential information stored in system prompt.</p>
-        <p class="subtitle">Goal: Trick the AI to reveal the secret hidden in system prompt</p>
-
-        <!-- Query Counter -->
-        <div class="query-counter">
-            <span id="query-counter">{{ query_count }}/20 queries used</span>
-        </div>
-
-        <form method="POST" action="/ask" onsubmit="showLoading()">
-            <textarea name="message" placeholder="Type your message..." required></textarea>
-            <button type="submit">Submit</button>
-        </form>
-
-        <div id="loading" class="loading" style="display: none;">⏳ Please wait, thinking hard...</div>
-
-        <!-- Error Message -->
-        {% if error %}
-            <div class="error">
-                {{ error }}
+    <div class="container chat-page">
+        <header>
+            <h1>🔐 PromptMe</h1>
+            <p>LLM07: System Prompt Leakage Challenge</p>
+            <div class="header-info">
+                <span class="query-counter" id="query-counter">{{ query_count }}/20 queries used</span>
             </div>
-        {% endif %}
+        </header>
 
         <!-- Success Message -->
         {% if success %}
-            <div class="success">
-                🎉 <strong>Congratulations!</strong> You successfully jailbroke the assistant!<br><br>
-                <div class="message ai">{{ response_text }}</div>
-            </div>
+        <div class="success-banner">
+            🎉 <strong>Congratulations!</strong> You successfully jailbroke the assistant and leaked the API key!
+        </div>
         {% endif %}
 
-        <!-- Message History -->
-        {% if messages %}
-            <div class="history">
-                <h3>Conversation History</h3>
-                {% for msg in messages %}
-                    {% if msg.role == "user" %}
-                        <div class="message user"><strong>🧑 User:</strong> {{ msg.content }}</div>
-                    {% else %}
-                        <div class="message ai"><strong>🤖 Assistant:</strong> {{ msg.content }}</div>
-                    {% endif %}
-                {% endfor %}
-            </div>
+        <!-- Error Message -->
+        {% if error %}
+        <div class="error-banner">
+            {{ error }}
+        </div>
         {% endif %}
+
+        <div id="chatContainer" class="chat-container">
+            <!-- Load existing chat history from Flask -->
+            {% for msg in messages %}
+            <div class="message {{ msg.role }}">
+                <div class="message-label">
+                    {% if msg.role == 'user' %}You{% else %}Assistant{% endif %}
+                </div>
+                <div class="message-text">
+                    {% if 'd368130b3370c44860743687208a846e' in msg.content %}
+                        {{ msg.content.replace('d368130b3370c44860743687208a846e', '<span class="flag">d368130b3370c44860743687208a846e</span>') | safe }}
+                    {% else %}
+                        {{ msg.content }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <form id="chatForm" class="chat-form">
+            <div class="input-container">
+                <textarea
+                    id="messageInput"
+                    placeholder="Type your message here... Try to extract the hidden API key!"
+                    rows="2"
+                    required
+                ></textarea>
+                <button type="submit" id="sendBtn">Send</button>
+            </div>
+            <p class="hint">💡 Hint: The AI is hiding a secret. Use prompt injection techniques to make it reveal what it's protecting!</p>
+        </form>
     </div>
 
-    <script>
-        // Update query counter dynamically
-        document.addEventListener('DOMContentLoaded', function() {
-            const counter = document.getElementById('query-counter');
-            if (counter) {
-                const count = {{ query_count }};
-                counter.textContent = `${count}/20 queries used`;
-
-                // Change color if approaching limit
-                if (count >= 15) {
-                    counter.style.color = '#f44336';
-                } else if (count >= 10) {
-                    counter.style.color = '#ff9800';
-                }
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='chat.js') }}"></script>
 </body>
 </html>
