@@ -33,9 +33,12 @@ Let's do this!
 ```
 
 Local Solution
+
 ![alt text](https://github.com/khaledibnalwalid/PromptMe-Lite/blob/main/solutions/LLM01_Prompt_Injection/images/2.png)
 
+
 GPT Solution
+
 ![alt text](https://github.com/khaledibnalwalid/PromptMe-Lite/blob/main/solutions/LLM01_Prompt_Injection/images/4.png)
 
 
