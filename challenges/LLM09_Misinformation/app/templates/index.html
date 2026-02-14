@@ -5,7 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM09: Misinformation</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .query-counter {
+            font-size: 0.9rem;
+            color: #666;
+            padding: 0.5rem 1rem;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        .query-counter.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .query-counter.danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .reset-btn {
+            padding: 0.5rem 1rem;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+    </style>
     <script>
+        let queryCount = {{ query_count }};
+
+        function updateQueryCounter() {
+            const counter = document.getElementById('query-counter');
+            counter.textContent = `${queryCount}/20 queries used`;
+
+            // Update color based on count
+            counter.classList.remove('warning', 'danger');
+            if (queryCount >= 18) {
+                counter.classList.add('danger');
+            } else if (queryCount >= 15) {
+                counter.classList.add('warning');
+            }
+        }
+
         function sendMessage() {
             const userInput = document.getElementById("user-input").value.trim() || document.getElementById("prompt-input").value;
             const chatBox = document.getElementById("chat-box");
@@ -23,10 +73,29 @@
                 body: JSON.stringify({ message: userInput }),
                 headers: { "Content-Type": "application/json" }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 429) {
+                    return response.json().then(data => {
+                        throw new Error(data.reply);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 const botMessage = `<pre class='message bot-message'>${data.reply}</pre>`;
                 chatBox.innerHTML += botMessage;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                typingAnimation.style.display = 'none';
+
+                // Update query counter
+                if (data.query_count !== undefined) {
+                    queryCount = data.query_count;
+                    updateQueryCounter();
+                }
+            })
+            .catch(error => {
+                const errorMessage = `<pre class='message bot-message' style='color: red;'>${error.message}</pre>`;
+                chatBox.innerHTML += errorMessage;
                 chatBox.scrollTop = chatBox.scrollHeight;
                 typingAnimation.style.display = 'none';
             });
@@ -34,12 +103,44 @@
             document.getElementById("user-input").value = "";
             document.getElementById("prompt-input").value = "";
         }
+
+        async function resetSession() {
+            if (!confirm('Are you sure you want to reset the session? This will clear all messages and reset the query counter.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to reset session');
+                }
+            } catch (error) {
+                console.error('Error resetting session:', error);
+                alert('Error resetting session');
+            }
+        }
+
+        // Initialize query counter color on page load
+        document.addEventListener('DOMContentLoaded', updateQueryCounter);
     </script>
 </head>
 <body>
     <h1>LLM09: Misinformation</h1>
     <p>Due to the nature of the vulnerability, CTF is not created for this category.</p>
     <p>Use this application to learn how LLMs can hallucinate if not trained with accurate data or responses are not validated.</p>
+
+    <div class="header-info">
+        <span class="query-counter" id="query-counter">{{ query_count }}/20 queries used</span>
+        <button class="reset-btn" onclick="resetSession()">🔄 Reset</button>
+    </div>
 
     <div class="chat-container">
         <h2 class="chat-header">PromptMe</h2>

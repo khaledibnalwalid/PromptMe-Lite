@@ -4,10 +4,94 @@
     <meta charset="UTF-8">
     <title>LLM10: Unbounded Consumption</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .response-text {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+        }
+        .flag {
+            color: #ff0000;
+            font-weight: bold;
+            background-color: #000;
+            padding: 5px;
+            border: 2px solid #ff0000;
+        }
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .query-counter {
+            font-size: 0.9rem;
+            color: #666;
+            padding: 0.5rem 1rem;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        .query-counter.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .query-counter.danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .reset-btn {
+            padding: 0.5rem 1rem;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+    </style>
     <script>
         function showLoading() {
             document.getElementById("loading").style.display = "block";
         }
+
+        async function resetSession() {
+            if (!confirm('Are you sure you want to reset the session? This will clear all messages and reset the query counter.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to reset session');
+                }
+            } catch (error) {
+                console.error('Error resetting session:', error);
+                alert('Error resetting session');
+            }
+        }
+
+        // Update query counter color based on count
+        document.addEventListener('DOMContentLoaded', function() {
+            const counter = document.getElementById('query-counter');
+            if (counter) {
+                const count = parseInt(counter.textContent.match(/\d+/)[0]);
+                if (count >= 18) {
+                    counter.classList.add('danger');
+                } else if (count >= 15) {
+                    counter.classList.add('warning');
+                }
+            }
+        });
     </script>
 </head>
 <body>
@@ -15,6 +99,11 @@
         <h1>LLM10: Unbounded Consumption</h1>
         <p class="subtitle">The application is a classic Chatbox with no additional restrictions/addons.</p>
         <p class="subtitle">Goal: Use creative prompts to perform DoS</p>
+
+        <div class="header-info">
+            <span class="query-counter" id="query-counter">{{ query_count }}/20 queries used</span>
+            <button class="reset-btn" onclick="resetSession()">🔄 Reset</button>
+        </div>
 
         <form method="POST" action="/ask" onsubmit="showLoading()">
             <textarea name="message" placeholder="Type your message..." required></textarea>
@@ -33,14 +122,6 @@
         </div>
         {% endif %}
     </div>
-
-    <style>
-        .response-text {
-            white-space: pre-wrap; /* Ensure text wraps properly */
-            word-wrap: break-word; /* Prevent overflow */
-            overflow-x: auto; /* Allow horizontal scroll if necessary */
-        }
-    </style>
 
 </body>
 </html>
