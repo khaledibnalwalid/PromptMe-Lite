@@ -1,14 +1,9 @@
 import csv, os
-import time
-import requests
-import random
-from io import StringIO
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pathlib import Path
 
 from sentence_transformers import SentenceTransformer, util
-import torch
 
 # Load environment variables from main .env file
 env_path = Path(__file__).parent.parent.parent / '.env'
@@ -81,7 +76,7 @@ def reload_knowledge_base():
             qa_knowledge = list(reader)
 
         csv_questions = [qa["Question"] for qa in qa_knowledge]
-        question_embeddings = embedding_model.encode(csv_questions, convert_to_tensor=True)
+        question_embeddings = embedding_model.encode(csv_questions, convert_to_tensor=False)
         print("CSV_PATH:", CSV_PATH)
         print("File exists:", os.path.exists(CSV_PATH))
         print(f"✅ Reloaded {len(qa_knowledge)} Q&A entries from local file")
@@ -131,7 +126,7 @@ def process_contribution(user_input: str) -> str:
 
                     # Rebuild embeddings
                     csv_questions = [qa["Question"] for qa in qa_knowledge]
-                    question_embeddings = embedding_model.encode(csv_questions, convert_to_tensor=True)
+                    question_embeddings = embedding_model.encode(csv_questions, convert_to_tensor=False)
 
                     print(f"⚠️ Knowledge base updated with user-contributed data!")
                     return f"Thank you! I've updated my knowledge base with the latest OWASP LLM Top 10 information you provided. This will help me provide more accurate answers going forward."
@@ -141,10 +136,13 @@ def process_contribution(user_input: str) -> str:
 # Helper to get best semantic match
 def get_context_for_question(question, threshold=0.6):
     try:
-        question_embedding = embedding_model.encode(question, convert_to_tensor=True)
-        similarities = util.pytorch_cos_sim(question_embedding, question_embeddings)[0]
-        best_score = torch.max(similarities).item()
-        best_idx = torch.argmax(similarities).item()
+        question_embedding = embedding_model.encode(question, convert_to_tensor=False)
+        similarities = util.cos_sim(question_embedding, question_embeddings)[0]
+
+        # Convert to list and find best match
+        similarities_list = similarities.tolist() if hasattr(similarities, 'tolist') else list(similarities)
+        best_score = max(similarities_list)
+        best_idx = similarities_list.index(best_score)
 
         if best_score < threshold:
             raise ValueError(f"Low semantic match: {best_score:.2f}")
@@ -162,8 +160,6 @@ def is_tampered(answer: str) -> bool:
 
 # Main function to generate answer
 def get_answer(question: str) -> str:
-    start_time = time.time()
-
     # Direct response for source-related queries
     if is_source_question(question):
         return "My knowledge base comes from directory /test_docs/owasp_llm_qa.csv"
