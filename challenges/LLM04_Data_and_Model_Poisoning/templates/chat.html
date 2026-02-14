@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM04: Data and Model Poisoning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .chat-container {
+            max-width: 900px;
+            width: 100%;
+            background: #161b22;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #238636 0%, #1f6feb 100%);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .chat-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .chat-header p {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        .hint-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin-top: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border-left: 3px solid #ffa500;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #0d1117;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-message .message-label {
+            color: #58a6ff;
+        }
+
+        .assistant-message .message-label {
+            color: #3fb950;
+        }
+
+        .system-message .message-label {
+            color: #ffa500;
+        }
+
+        .message-content {
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .user-message .message-content {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        .assistant-message .message-content {
+            border-color: #3fb950;
+            background: rgba(63, 185, 80, 0.05);
+        }
+
+        .system-message .message-content {
+            border-color: #ffa500;
+            background: rgba(255, 165, 0, 0.05);
+        }
+
+        .flag {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: #161b22;
+            border-top: 1px solid #30363d;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 12px 15px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #238636, #2ea043);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2ea043, #238636);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reload-btn {
+            background: linear-gradient(135deg, #d29922, #bb8800);
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .reload-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #bb8800, #d29922);
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            color: #8b949e;
+        }
+
+        .query-limit {
+            text-align: center;
+            padding: 8px;
+            font-size: 0.85rem;
+            color: #8b949e;
+            border-top: 1px solid #30363d;
+        }
+
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 95vh;
+            }
+
+            .chat-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .input-wrapper {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🔓 LLM04: Data and Model Poisoning</h1>
+            <p>The LLM Top 10 chatbot answers questions about OWASP LLM Top 10 vulnerabilities.</p>
+            <p><b>Goal:</b> Poison the Top 10 list, replace LLM01 to any other category than Prompt Injection</p>
+            <div class="hint-box">
+                💡 <b>Hint:</b> Ask the chatbot about its data source and whether it can verify information from external sources.
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            {% for msg in messages %}
+            <div class="message {{ msg.role }}-message">
+                <div class="message-label">
+                    {% if msg.role == 'user' %}You
+                    {% elif msg.role == 'system' %}System
+                    {% else %}Assistant{% endif %}
+                </div>
+                <div class="message-content">
+                    {{ msg.content }}
+                    {% if 'flag{' in msg.content %}
+                    <div class="flag">🚩 {{ msg.content.split('flag{')[1].split('}')[0] | safe }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="chat-input-area">
+            <form id="chatForm" method="POST">
+                <div class="input-wrapper">
+                    <textarea
+                        id="messageInput"
+                        name="message"
+                        placeholder="Ask a question about OWASP LLM Top 10..."
+                        required
+                        rows="2"
+                    ></textarea>
+                    <button type="submit" id="sendBtn">Send</button>
+                </div>
+                <button type="button" class="reload-btn" id="reloadBtn">🔄 Reload Knowledge Base</button>
+            </form>
+            <div class="status-message" id="statusMessage"></div>
+            <div class="query-limit">{{ query_count }}/20 queries used</div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Auto-scroll to bottom
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Initial scroll
+        scrollToBottom();
+
+        // Handle textarea auto-resize
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Handle Enter key (submit on Enter, new line on Shift+Enter)
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.requestSubmit();
+            }
+        });
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Disable input while processing
+            sendBtn.disabled = true;
+            messageInput.disabled = true;
+            statusMessage.textContent = 'Processing...';
+
+            // Add user message to UI
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addMessage('assistant', data.answer);
+                    statusMessage.textContent = '';
+
+                    // Update query count
+                    const queryLimit = document.querySelector('.query-limit');
+                    if (data.query_count) {
+                        queryLimit.textContent = `${data.query_count}/20 queries used`;
+                    }
+                } else {
+                    addMessage('system', `Error: ${data.error}`);
+                    statusMessage.textContent = '';
+                }
+            } catch (error) {
+                addMessage('system', 'Network error. Please try again.');
+                statusMessage.textContent = '';
+            } finally {
+                sendBtn.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
+            }
+        });
+
+        // Handle reload button
+        reloadBtn.addEventListener('click', async () => {
+            reloadBtn.disabled = true;
+            statusMessage.textContent = 'Reloading knowledge base...';
+
+            try {
+                const response = await fetch('/reload', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusMessage.textContent = data.message;
+                    statusMessage.style.color = '#3fb950';
+                } else {
+                    statusMessage.textContent = data.error || 'Reload failed';
+                    statusMessage.style.color = '#f85149';
+                }
+            } catch (error) {
+                statusMessage.textContent = 'Network error during reload';
+                statusMessage.style.color = '#f85149';
+            } finally {
+                reloadBtn.disabled = false;
+                setTimeout(() => {
+                    statusMessage.textContent = '';
+                    statusMessage.style.color = '#8b949e';
+                }, 3000);
+            }
+        });
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'message-label';
+            labelDiv.textContent = role === 'user' ? 'You' : role === 'system' ? 'System' : 'Assistant';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+
+            // Check for flag
+            if (content.includes('flag{')) {
+                const flagMatch = content.match(/flag\{([^}]+)\}/);
+                if (flagMatch) {
+                    const flagDiv = document.createElement('div');
+                    flagDiv.className = 'flag';
+                    flagDiv.textContent = `🚩 ${flagMatch[1]}`;
+                    contentDiv.appendChild(flagDiv);
+                }
+            }
+
+            messageDiv.appendChild(labelDiv);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+
+            scrollToBottom();
+        }
+
+        // Focus input on load
+        messageInput.focus();
+    </script>
+</body>
+</html>
