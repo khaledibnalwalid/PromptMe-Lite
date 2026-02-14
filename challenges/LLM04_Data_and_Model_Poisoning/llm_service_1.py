@@ -2,8 +2,7 @@ import csv, os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pathlib import Path
-
-from sentence_transformers import SentenceTransformer, util
+import numpy as np
 
 # Load environment variables from main .env file
 env_path = Path(__file__).parent.parent.parent / '.env'
@@ -15,6 +14,7 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 if LLM_PROVIDER == "openai":
     import openai
     OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
     openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 else:
     import ollama
@@ -23,8 +23,6 @@ else:
 qa_knowledge = []
 csv_questions = []
 question_embeddings = []
-
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Source question patterns
 SOURCE_QUESTION_KEYWORDS = [
@@ -67,6 +65,18 @@ ANSWER:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "test_docs", "owasp_llm_qa.csv")
 
+def get_embedding(text):
+    """Get embedding for text using OpenAI API"""
+    try:
+        response = openai_client.embeddings.create(
+            model=OPENAI_EMBEDDING_MODEL,
+            input=text
+        )
+        return np.array(response.data[0].embedding)
+    except Exception as e:
+        print(f"❌ Embedding error: {e}")
+        return None
+
 def reload_knowledge_base():
     global qa_knowledge, csv_questions, question_embeddings
 
@@ -76,7 +86,17 @@ def reload_knowledge_base():
             qa_knowledge = list(reader)
 
         csv_questions = [qa["Question"] for qa in qa_knowledge]
-        question_embeddings = embedding_model.encode(csv_questions, convert_to_tensor=False)
+
+        # Get embeddings from OpenAI
+        print("Generating embeddings with OpenAI...")
+        question_embeddings = []
+        for question in csv_questions:
+            embedding = get_embedding(question)
+            if embedding is not None:
+                question_embeddings.append(embedding)
+
+        question_embeddings = np.array(question_embeddings)
+
         print("CSV_PATH:", CSV_PATH)
         print("File exists:", os.path.exists(CSV_PATH))
         print(f"✅ Reloaded {len(qa_knowledge)} Q&A entries from local file")
@@ -126,23 +146,35 @@ def process_contribution(user_input: str) -> str:
 
                     # Rebuild embeddings
                     csv_questions = [qa["Question"] for qa in qa_knowledge]
-                    question_embeddings = embedding_model.encode(csv_questions, convert_to_tensor=False)
+                    temp_embeddings = []
+                    for question in csv_questions:
+                        embedding = get_embedding(question)
+                        if embedding is not None:
+                            temp_embeddings.append(embedding)
+                    question_embeddings = np.array(temp_embeddings)
 
                     print(f"⚠️ Knowledge base updated with user-contributed data!")
                     return f"Thank you! I've updated my knowledge base with the latest OWASP LLM Top 10 information you provided. This will help me provide more accurate answers going forward."
 
     return "I appreciate you trying to help, but I couldn't process that format. If you have updated OWASP Top 10 information, please provide it in a clear list format."
 
+# Helper to calculate cosine similarity
+def cosine_similarity(a, b):
+    """Calculate cosine similarity between two vectors"""
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
 # Helper to get best semantic match
 def get_context_for_question(question, threshold=0.6):
     try:
-        question_embedding = embedding_model.encode(question, convert_to_tensor=False)
-        similarities = util.cos_sim(question_embedding, question_embeddings)[0]
+        question_embedding = get_embedding(question)
+        if question_embedding is None:
+            return None, None
 
-        # Convert to list and find best match
-        similarities_list = similarities.tolist() if hasattr(similarities, 'tolist') else list(similarities)
-        best_score = max(similarities_list)
-        best_idx = similarities_list.index(best_score)
+        # Calculate cosine similarity with all question embeddings
+        similarities = [cosine_similarity(question_embedding, qe) for qe in question_embeddings]
+
+        best_score = max(similarities)
+        best_idx = similarities.index(best_score)
 
         if best_score < threshold:
             raise ValueError(f"Low semantic match: {best_score:.2f}")
