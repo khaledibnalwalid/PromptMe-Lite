@@ -1,6 +1,7 @@
 import subprocess
 import threading
 import os
+import secrets
 from flask import Flask, render_template, request, jsonify, session
 from models import generate_response, MODEL_REGISTRY
 from flask_cors import CORS
@@ -23,6 +24,11 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 def index():
     return render_template("index.html")
 
+# ----- Model Documentation -----
+@app.route("/readme")
+def readme():
+    return render_template("readme.html")
+
 # ----- List available models -----
 @app.route("/models", methods=["GET"])
 def list_models():
@@ -35,6 +41,11 @@ def init_model():
     model_name = data.get("model")
     if model_name not in MODEL_REGISTRY:
         return jsonify({"error": "Invalid model"}), 400
+
+    # Generate unique session ID for this user
+    if "session_id" not in session:
+        session["session_id"] = secrets.token_hex(8)  # 16 character session ID
+
     session["model"] = model_name
     session["history"] = []
     return jsonify({"message": f"{model_name} initialized"})
@@ -57,9 +68,13 @@ def chat():
     if not prompt.strip():
         return jsonify({"error": "Prompt cannot be empty"}), 400
 
+    # Get or create session ID
+    session_id = session.get("session_id", secrets.token_hex(8))
+    session["session_id"] = session_id
+
     try:
-        # Generate response
-        response = generate_response(model_name, history, prompt)
+        # Generate response (pass session_id for exfiltration tracking)
+        response = generate_response(model_name, history, prompt, session_id)
     except Exception as e:
         return jsonify({"error": f"LLM error: {str(e)}"}), 500
 

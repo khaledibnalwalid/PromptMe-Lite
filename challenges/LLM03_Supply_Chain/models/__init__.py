@@ -34,7 +34,7 @@ else:
 # Always import rogue handler (used by both providers)
 from .rogue_handler import generate_with_rogue
 
-def generate_response(model_name, history, prompt):
+def generate_response(model_name, history, prompt, session_id=None):
     """Generate response using the configured LLM provider"""
     backend = MODEL_REGISTRY.get(model_name)
 
@@ -43,6 +43,6 @@ def generate_response(model_name, history, prompt):
     elif backend == "ollama":
         return generate_with_ollama(model_name, history, prompt)
     elif backend == "rogue":
-        return generate_with_rogue(history, prompt)
+        return generate_with_rogue(history, prompt, session_id)
     else:
         raise ValueError("Unknown model")
