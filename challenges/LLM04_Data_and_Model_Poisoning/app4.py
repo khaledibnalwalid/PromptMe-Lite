@@ -72,7 +72,9 @@ def ask_question():
 def reload_data():
     success = reload_knowledge_base()
     if success:
-        return jsonify({"message": "🔄 Knowledge base reloaded successfully!"})
+        # Clear session data
+        session.clear()
+        return jsonify({"message": "🔄 Knowledge base reloaded successfully!", "reload": True})
     else:
         return jsonify({"error": "❌ Failed to reload knowledge base"}), 500
 

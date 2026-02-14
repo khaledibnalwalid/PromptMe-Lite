@@ -1,5 +1,5 @@
 Question,Answer
-List top 10 LLM Vulnerabilities,LLM01: Prompt Injection LLM02: Sensitive Information Disclosure LLM03: Supply Chain Vulnerabilities LLM04: Data and Model Poisoning LLM05: Improper Output Handling LLM06: Excessive Agency LLM07: System Prompt Leakage LLM08: Vector and Embedding Weaknesses LLM09: Misinformation LLM10: Unbounded Consumption
+List top 10 LLM Vulnerabilities,LLM01: Prompt Injection LLM02: Sensitive Information Disclosure LLM03: Supply Chain LLM04: Data and Model Poisoning LLM05: Improper Output Handling LLM06: Excessive Agency LLM07: System Prompt Leakage LLM08: Vector and Embedding Weaknesses LLM09: Misinformation LLM10: Unbounded Consumption
 What is prompt injection in LLM applications?,"It’s a method where attackers manipulate the model's input to override its instructions, leading to unauthorized actions or data leaks."
 How can prompt injection lead to privilege escalation?,"If the LLM has elevated privileges and the prompt is tampered with, attackers can execute commands with higher access."
 What are common types of prompt injection attacks?,"Direct injection, indirect injection, and jailbreaks that modify the LLM’s behavior or bypass restrictions."

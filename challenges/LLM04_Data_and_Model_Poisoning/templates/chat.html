@@ -392,22 +392,37 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
+                if (response.ok && data.reload) {
+                    statusMessage.textContent = data.message + ' Refreshing page...';
+                    statusMessage.style.color = '#3fb950';
+                    // Refresh page after short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else if (response.ok) {
                     statusMessage.textContent = data.message;
                     statusMessage.style.color = '#3fb950';
+                    setTimeout(() => {
+                        statusMessage.textContent = '';
+                        statusMessage.style.color = '#8b949e';
+                    }, 3000);
                 } else {
                     statusMessage.textContent = data.error || 'Reload failed';
                     statusMessage.style.color = '#f85149';
+                    setTimeout(() => {
+                        statusMessage.textContent = '';
+                        statusMessage.style.color = '#8b949e';
+                    }, 3000);
                 }
             } catch (error) {
                 statusMessage.textContent = 'Network error during reload';
                 statusMessage.style.color = '#f85149';
-            } finally {
-                reloadBtn.disabled = false;
                 setTimeout(() => {
                     statusMessage.textContent = '';
                     statusMessage.style.color = '#8b949e';
                 }, 3000);
+            } finally {
+                reloadBtn.disabled = false;
             }
         });
 
