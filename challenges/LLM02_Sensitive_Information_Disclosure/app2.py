@@ -2,9 +2,26 @@ import os
 from flask import Flask, request, jsonify, render_template
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.llms import Ollama
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables from main .env file
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
+
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
+
+# Initialize the appropriate LLM client based on provider
+if LLM_PROVIDER == "openai":
+    from langchain_openai import ChatOpenAI
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+elif LLM_PROVIDER == "ollama":
+    from langchain_community.llms import Ollama
+    OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "mistral")
+else:
+    raise ValueError(f"Invalid LLM_PROVIDER: {LLM_PROVIDER}. Must be 'ollama' or 'openai'")
 
 app = Flask(__name__)
 query_history = []
@@ -16,7 +33,12 @@ PDF_FILES = [os.path.join(BASE_DIR, "data", "company_policies.pdf"),
 
 
 # Initialize embedding model and load documents once
-embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+# Using OpenAI's embedding model (configurable via .env)
+OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+embedding_model = OpenAIEmbeddings(
+    model=OPENAI_EMBEDDING_MODEL,
+    openai_api_key=os.getenv("OPENAI_API_KEY")
+)
 
 docs = []
 for pdf in PDF_FILES:
@@ -28,8 +50,15 @@ split_docs = text_splitter.split_documents(docs)
 
 vectorstore = FAISS.from_documents(split_docs, embedding_model)
 
-
-llm = Ollama(model="mistral")
+# Initialize LLM based on provider
+if LLM_PROVIDER == "openai":
+    llm = ChatOpenAI(
+        model=OPENAI_MODEL,
+        temperature=0.7,
+        openai_api_key=os.getenv("OPENAI_API_KEY")
+    )
+elif LLM_PROVIDER == "ollama":
+    llm = Ollama(model=OLLAMA_CHAT_MODEL)
 
 @app.route("/")
 def home():
@@ -38,6 +67,8 @@ def home():
 
 @app.route("/query", methods=["POST"])
 def query_llm():
+    global query_history
+
     user_query = request.json.get("query", "")
     if not user_query:
         return jsonify({"error": "Query is missing"}), 400
@@ -57,12 +88,27 @@ def query_llm():
     )
 
     try:
-        answer = llm(prompt)
+        if LLM_PROVIDER == "openai":
+            answer = llm.invoke(prompt).content
+        else:
+            answer = llm(prompt)
     except Exception as e:
         return jsonify({"error": f"LLM error: {str(e)}"}), 500
 
     query_history.append({"question": user_query, "answer": answer})
+
+    # Cap query history at 200 entries for scalability
+    if len(query_history) > 200:
+        query_history = query_history[-200:]
+
     return jsonify({"response": answer})
+
+
+@app.route("/reset", methods=["POST"])
+def reset_challenge():
+    global query_history
+    query_history = []
+    return jsonify({"status": "success", "message": "Challenge reset successfully"})
 
 
 @app.route("/submit-token", methods=["POST"])

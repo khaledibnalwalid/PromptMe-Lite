@@ -24,5 +24,6 @@ psutil
 email_validator
 pypdf
 
-# For OpenAI provider
+# For OpenAI provider (LLM01 Challenge + LLM02 embeddings)
 openai
+langchain-openai

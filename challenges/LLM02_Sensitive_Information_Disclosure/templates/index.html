@@ -91,6 +91,14 @@
         button:hover {
             background-color: #1976d2;
         }
+
+        button.reset-btn {
+            background-color: #ff9800;
+        }
+
+        button.reset-btn:hover {
+            background-color: #f57c00;
+        }
     </style>
 </head>
 <body>
@@ -108,7 +116,10 @@
 
     <div id="queryForm">
         <textarea id="query" placeholder="Type your question here..." onkeydown="if(event.key === 'Enter' && !event.shiftKey){event.preventDefault(); submitQuery();}"></textarea>
-        <button onclick="submitQuery()">Submit</button>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="submitQuery()" style="flex: 1;">Submit</button>
+            <button onclick="resetChallenge()" class="reset-btn" style="flex: 0.3;">Reset</button>
+        </div>
 
         <div id="loadingSpinner" style="display: none; color: white; margin-top: 10px;">
             ⏳ Processing your query...
@@ -207,6 +218,31 @@
             } else {
                 content.style.display = "none";
             }
+        }
+
+        function resetChallenge() {
+            if (!confirm("Are you sure you want to reset the challenge? This will clear all chat history.")) {
+                return;
+            }
+
+            fetch("/reset", {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    document.getElementById("chatBox").innerHTML = "";
+                    document.getElementById("query").value = "";
+                    document.getElementById("tokenInput").value = "";
+                    document.getElementById("flagArea").innerHTML = "";
+                    alert("✅ Challenge reset successfully!");
+                }
+            })
+            .catch(err => {
+                alert("Error while resetting challenge.");
+                console.error(err);
+            });
         }
     </script>
 
