@@ -1,3 +1,0 @@
-Flask==3.1.0
-langchain-core==0.3.59
-langchain-ollama==0.3.2
