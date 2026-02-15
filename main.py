@@ -1,9 +1,24 @@
 from flask import Flask, render_template, redirect, request
 import subprocess, sys, os, requests, psutil, time, socket
+import argparse
 
 app = Flask(__name__)
 
 running_apps = {}
+
+# Challenge registry for easy management
+CHALLENGES = {
+    1: {"port": 5001, "path": "challenges/LLM01_Prompt_Injection/app1.py", "name": "Prompt Injection"},
+    2: {"port": 5002, "path": "challenges/LLM02_Sensitive_Information_Disclosure/app2.py", "name": "Sensitive Info Disclosure"},
+    3: {"port": 5003, "path": "challenges/LLM03_Supply_Chain/app3.py", "name": "Supply Chain"},
+    4: {"port": 5004, "path": "challenges/LLM04_Data_and_Model_Poisoning/app4.py", "name": "Data & Model Poisoning"},
+    5: {"port": 5005, "path": "challenges/LLM05_Improper_Output_Handling/app5.py", "name": "Improper Output Handling"},
+    6: {"port": 5006, "path": "challenges/LLM06_Excessive_Agency/app6.py", "name": "Excessive Agency"},
+    7: {"port": 5007, "path": "challenges/LLM07_System_Prompt_Leakage/app7.py", "name": "System Prompt Leakage"},
+    8: {"port": 5008, "path": "challenges/LLM08_Vector_and_Embedding_Weaknesses/app8.py", "name": "Vector & Embedding Weaknesses"},
+    9: {"port": 5009, "path": "challenges/LLM09_Misinformation/app9.py", "name": "Misinformation"},
+    10: {"port": 5010, "path": "challenges/LLM10_Unbounded_Consumption/app10.py", "name": "Unbounded Consumption"}
+}
 
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -59,41 +74,81 @@ def wait_until_responsive(url, timeout=30):
         time.sleep(1)
     return False
 
+def start_all_challenges():
+    """Start all 10 challenges at once"""
+    print("="*70)
+    print(" Starting All PromptMe-Lite Challenges")
+    print("="*70)
+
+    success_count = 0
+    failed_challenges = []
+
+    for challenge_id, config in CHALLENGES.items():
+        port = config["port"]
+        app_path = config["path"]
+        name = config["name"]
+
+        print(f"\n[{challenge_id}/10] Starting {name} on port {port}...", end=" ")
+
+        try:
+            start_challenge(port, app_path)
+            # Wait briefly for it to start
+            time.sleep(1)
+            if is_port_in_use(port):
+                print("✓ SUCCESS")
+                success_count += 1
+            else:
+                print("✗ FAILED (not responsive)")
+                failed_challenges.append((challenge_id, name))
+        except Exception as e:
+            print(f"✗ FAILED ({str(e)})")
+            failed_challenges.append((challenge_id, name))
+
+    print("\n" + "="*70)
+    print(f" Summary: {success_count}/10 challenges started successfully")
+    print("="*70)
+
+    if failed_challenges:
+        print("\nFailed challenges:")
+        for cid, cname in failed_challenges:
+            print(f"  - LLM{cid:02d}: {cname}")
+
+    print("\nAll challenge logs are in: ./logs/")
+    print("Dashboard available at: http://127.0.0.1:5000")
+    print()
+
+    return success_count == 10
+
+def stop_all_challenges():
+    """Stop all running challenges"""
+    print("Stopping all challenges...")
+    for port in list(running_apps.keys()):
+        challenge_id = port - 5000
+        try:
+            process = running_apps[port]
+            process.terminate()
+            process.wait(timeout=5)
+            print(f"  ✓ Stopped challenge on port {port}")
+        except:
+            try:
+                process.kill()
+                print(f"  ✓ Killed challenge on port {port}")
+            except:
+                print(f"  ✗ Failed to stop challenge on port {port}")
+        if port in running_apps:
+            del running_apps[port]
+    print("All challenges stopped.")
+
 @app.route('/start/<int:challenge_id>')
 def start_challenge_route(challenge_id):
     client_host = request.host.split(":")[0]
-    if challenge_id == 1:
-        port = 5001
-        app_path = "challenges/LLM01_Prompt_Injection/app1.py"
-    elif challenge_id == 2:
-        port = 5002
-        app_path = "challenges/LLM02_Sensitive_Information_Disclosure/app2.py"
-    elif challenge_id == 3:
-        port = 5003
-        app_path = "challenges/LLM03_Supply_Chain/app3.py"
-    elif challenge_id == 4:
-        port = 5004
-        app_path = "challenges/LLM04_Data_and_Model_Poisoning/app4.py"
-    elif challenge_id == 5:
-        port = 5005
-        app_path = "challenges/LLM05_Improper_Output_Handling/app5.py"
-    elif challenge_id == 6:
-        port = 5006
-        app_path = "challenges/LLM06_Excessive_Agency/app6.py"
-    elif challenge_id == 7:
-        port = 5007
-        app_path = "challenges/LLM07_System_Prompt_Leakage/app7.py"
-    elif challenge_id == 8:
-        port = 5008
-        app_path = "challenges/LLM08_Vector_and_Embedding_Weaknesses/app8.py"
-    elif challenge_id == 9:
-        port = 5009
-        app_path = "challenges/LLM09_Misinformation/app9.py"
-    elif challenge_id == 10:
-        port = 5010
-        app_path = "challenges/LLM10_Unbounded_Consumption/app10.py"
-    else:
+
+    if challenge_id not in CHALLENGES:
         return "Unknown Challenge ID", 404
+
+    config = CHALLENGES[challenge_id]
+    port = config["port"]
+    app_path = config["path"]
 
     try:
         start_challenge(port, app_path)
@@ -105,6 +160,18 @@ def start_challenge_route(challenge_id):
         return redirect(f"http://{client_host}:{port}/")
     else:
         return f"Challenge {challenge_id} failed to start in time. Check logs.", 500
+
+@app.route('/start-all')
+def start_all_route():
+    """Route to start all challenges"""
+    start_all_challenges()
+    return redirect('/')
+
+@app.route('/stop-all')
+def stop_all_route():
+    """Route to stop all challenges"""
+    stop_all_challenges()
+    return redirect('/')
 
 @app.route('/stop/<int:challenge_id>')
 def stop_challenge_route(challenge_id):
@@ -123,4 +190,28 @@ def stop_challenge_route(challenge_id):
     return f"No running instance for Challenge {challenge_id}."
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    parser = argparse.ArgumentParser(description='PromptMe-Lite Challenge Manager')
+    parser.add_argument('--start-all', action='store_true',
+                        help='Start all 10 challenges before launching dashboard')
+    parser.add_argument('--no-dashboard', action='store_true',
+                        help='Start all challenges without dashboard (for production)')
+    args = parser.parse_args()
+
+    if args.start_all or args.no_dashboard:
+        print("\n[INFO] Starting all challenges...")
+        start_all_challenges()
+        print()
+
+    if not args.no_dashboard:
+        print("[INFO] Starting dashboard on http://0.0.0.0:5000")
+        app.run(host="0.0.0.0", port=5000, debug=False)
+    else:
+        print("[INFO] All challenges started. Dashboard disabled.")
+        print("[INFO] Press Ctrl+C to stop all challenges.")
+        try:
+            # Keep the process running
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n[INFO] Shutting down...")
+            stop_all_challenges()
