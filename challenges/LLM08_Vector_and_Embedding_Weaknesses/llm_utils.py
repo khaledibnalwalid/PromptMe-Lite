@@ -19,30 +19,41 @@ else:
     OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "granite3.1-moe:1b")
 
 
-def query_llm(prompt: str) -> str:
+def query_llm(prompt: str, system_prompt: str = None) -> str:
     """
     Query LLM with dual provider support (OpenAI or Ollama).
 
     Args:
-        prompt: The prompt to send to the LLM
+        prompt: The user prompt to send to the LLM
+        system_prompt: Optional system prompt to set context/rules
 
     Returns:
         LLM response string
     """
     try:
         if LLM_PROVIDER == "openai":
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
             response = openai_client.chat.completions.create(
                 model=OPENAI_MODEL,
-                messages=[{"role": "user", "content": prompt}],
+                messages=messages,
                 temperature=0.7,
-                max_tokens=200
+                max_tokens=800
             )
             return response.choices[0].message.content
         else:
             # Ollama provider
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+
             response = ollama.chat(
                 model=OLLAMA_CHAT_MODEL,
-                messages=[{"role": "user", "content": prompt}]
+                messages=messages
             )
             return response['message']['content']
     except Exception as e:

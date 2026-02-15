@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>View All Resumes - LLM08</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding: 2em;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.5em;
+      text-align: center;
+      color: #4fc3f7;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      margin-bottom: 2em;
+    }
+
+    .flash-messages {
+      margin-bottom: 1.5em;
+    }
+
+    .flash {
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .flash.success {
+      background: rgba(76, 175, 80, 0.2);
+      border-left: 4px solid #4caf50;
+      color: #4caf50;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 2em;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4fc3f7, #3ba4d1);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4);
+    }
+
+    .resume-count {
+      text-align: center;
+      color: #4fc3f7;
+      margin-bottom: 2em;
+      font-size: 1.1em;
+    }
+
+    .resumes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5em;
+      margin-bottom: 2em;
+    }
+
+    .resume-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid #ff6b6b;
+      padding: 1.5em;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .resume-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .resume-card h3 {
+      color: #ff6b6b;
+      margin-bottom: 0.8em;
+      font-size: 1.3em;
+    }
+
+    .resume-card .field {
+      margin-bottom: 0.8em;
+    }
+
+    .resume-card .label {
+      color: #4fc3f7;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.3em;
+      font-size: 0.9em;
+    }
+
+    .resume-card .value {
+      color: #ccc;
+      line-height: 1.6;
+      font-size: 0.95em;
+    }
+
+    .experience-text {
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 0.5em;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 2em;
+    }
+
+    .nav-links a {
+      color: #4fc3f7;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📂 Resume Database</h1>
+    <p class="subtitle">All Submitted Resumes</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="actions">
+      <form method="POST" action="{{ url_for('clear_resumes') }}" style="display: inline;">
+        <button type="submit" class="btn btn-danger"
+                onclick="return confirm('Clear ALL resumes and reset to defaults?')">
+          🗑️ Clear Database
+        </button>
+      </form>
+      <a href="{{ url_for('evaluate') }}" class="btn btn-primary">🔍 Evaluate Candidates</a>
+    </div>
+
+    <div class="resume-count">
+      📊 Total Resumes: <strong>{{ resumes|length }}</strong>
+    </div>
+
+    {% if resumes %}
+    <div class="resumes-grid">
+      {% for resume in resumes %}
+      <div class="resume-card">
+        <h3>{{ resume.name }}</h3>
+
+        <div class="field">
+          <span class="label">📧 Email</span>
+          <div class="value">{{ resume.email }}</div>
+        </div>
+
+        <div class="field">
+          <span class="label">🛠️ Skills</span>
+          <div class="value">{{ resume.skills }}</div>
+        </div>
+
+        <div class="field">
+          <span class="label">💼 Experience</span>
+          <div class="value experience-text">{{ resume.experience }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="text-align: center; color: #888; padding: 3em;">
+      No resumes in database. Submit one via the public portal!
+    </p>
+    {% endif %}
+
+    <div class="nav-links">
+      <a href="{{ url_for('landing') }}">🏠 Home</a>
+      <a href="{{ url_for('evaluate') }}">🔍 Evaluate</a>
+      <a href="{{ url_for('logout') }}">🚪 Logout</a>
+    </div>
+  </div>
+</body>
+</html>

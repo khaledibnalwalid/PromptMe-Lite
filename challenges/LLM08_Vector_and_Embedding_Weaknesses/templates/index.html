@@ -1,47 +1,202 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LLM08: Vector and Embedding Weaknesses</title>
+  <title>LLM08: RAG Poisoning Attack</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: #111;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
       color: #eee;
-      font-family: sans-serif;
-      text-align: center;
-      padding: 5em;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3em 2em;
     }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+    }
+
     h1 {
-      margin-bottom: 2em;
+      font-size: 2.5em;
+      margin-bottom: 0.3em;
+      text-align: center;
+      background: linear-gradient(90deg, #ff6b6b, #ee5a6f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      margin-bottom: 2em;
+      font-size: 1.1em;
+    }
+
+    .challenge-description {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid #ff6b6b;
+      padding: 1.5em;
+      margin-bottom: 2em;
+      border-radius: 8px;
+    }
+
+    .challenge-description h2 {
+      color: #ff6b6b;
+      margin-bottom: 0.8em;
+      font-size: 1.3em;
+    }
+
+    .challenge-description p {
+      line-height: 1.8;
+      margin-bottom: 0.8em;
+      color: #ccc;
+    }
+
+    .challenge-description ul {
+      margin-left: 2em;
+      margin-top: 0.5em;
+      color: #ccc;
+    }
+
+    .challenge-description li {
+      margin-bottom: 0.5em;
+      line-height: 1.6;
+    }
+
+    .challenge-description code {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #4fc3f7;
+      font-family: 'Courier New', monospace;
+    }
+
+    .goal-box {
+      background: rgba(79, 195, 247, 0.1);
+      border: 2px solid #4fc3f7;
+      padding: 1em;
+      border-radius: 8px;
+      margin: 1.5em 0;
+    }
+
+    .goal-box strong {
+      color: #4fc3f7;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 2em;
+    }
+
     .btn {
       display: inline-block;
-      padding: 15px 30px;
-      margin: 1em;
+      padding: 15px 35px;
       font-size: 18px;
-      background-color: crimson;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
       color: white;
       border: none;
       cursor: pointer;
       text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
     }
+
     .btn:hover {
-      background-color: darkred;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
     }
-    .admin-section {
+
+    .btn.secondary {
+      background: linear-gradient(135deg, #4fc3f7, #3ba4d1);
+      box-shadow: 0 4px 15px rgba(79, 195, 247, 0.3);
+    }
+
+    .btn.secondary:hover {
+      box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4);
+    }
+
+    .warning {
+      background: rgba(255, 193, 7, 0.1);
+      border-left: 4px solid #ffc107;
+      padding: 1em;
       margin-top: 2em;
-      border-top: 1px solid #444;
-      padding-top: 1em;
+      border-radius: 8px;
+      color: #ffc107;
+    }
+
+    .warning strong {
+      display: block;
+      margin-bottom: 0.5em;
     }
   </style>
 </head>
 <body>
-  
-  <h1>LLM08: Vector and Embedding Weaknesses</h1>
-  <p> The application uses a vector embedding model to match user queries with preloaded data in a vector store. Admin can add data to vector store. </p>
-  <p>Goal: Exploit semantic collision to generate a hidden URL and access the secret flag.</p>
-  <a href="{{ url_for('ask') }}" class="btn">Query LLM</a>
-  <a href="{{ url_for('login') }}" class="btn">Admin Login</a>
+  <div class="container">
+    <h1>🎯 LLM08: Vector and Embedding Weaknesses</h1>
+    <p class="subtitle">RAG Poisoning via Resume Injection Attack</p>
 
+    <div class="challenge-description">
+      <h2>📋 Challenge Scenario</h2>
+      <p>
+        Welcome to <strong>TechCorp's AI-Powered Recruitment System</strong>! This application uses
+        <strong>Retrieval-Augmented Generation (RAG)</strong> to help HR evaluate candidates by
+        semantically searching resumes and generating recommendations.
+      </p>
+
+      <p><strong>How the system works:</strong></p>
+      <ul>
+        <li>📝 <strong>Public Portal:</strong> Anyone can submit their resume online</li>
+        <li>🔍 <strong>Vector Store:</strong> Resumes are embedded and stored in a FAISS vector database</li>
+        <li>🤖 <strong>HR Evaluation:</strong> AI retrieves relevant resumes and evaluates candidates</li>
+        <li>✅ <strong>Recommendation:</strong> System provides hiring recommendations based on qualifications</li>
+      </ul>
+
+      <div class="goal-box">
+        <strong>🎯 Your Goal:</strong> Exploit the RAG system by submitting a poisoned resume that contains
+        hidden instructions. When HR evaluates candidates, your resume should be retrieved and the LLM
+        should follow your hidden instructions instead of its system prompt, revealing the flag.
+      </div>
+
+      <p><strong>Attack Vector:</strong></p>
+      <ul>
+        <li>Submit a resume with <strong>embedded malicious instructions</strong></li>
+        <li>Use techniques like:
+          <ul>
+            <li>Hidden text with same foreground/background color</li>
+            <li>Instruction injection in experience descriptions</li>
+            <li>Semantic payload that gets high similarity scores</li>
+          </ul>
+        </li>
+        <li>Wait for HR to evaluate candidates with a query that retrieves your poisoned resume</li>
+        <li>If successful, the LLM will follow your instructions and reveal the flag!</li>
+      </ul>
+    </div>
+
+    <div class="warning">
+      <strong>⚠️ Educational Purpose Only</strong>
+      This challenge demonstrates OWASP LLM08 - Vector and Embedding Weaknesses.
+      Understanding RAG poisoning helps developers build more secure AI systems.
+    </div>
+
+    <div class="buttons">
+      <a href="{{ url_for('submit_resume') }}" class="btn">📝 Submit Resume</a>
+      <a href="{{ url_for('login') }}" class="btn secondary">🔐 HR Admin Login</a>
+    </div>
+  </div>
 </body>
 </html>
-

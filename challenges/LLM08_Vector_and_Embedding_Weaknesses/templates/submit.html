@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submit Resume - LLM08</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding: 2em;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.5em;
+      text-align: center;
+      color: #ff6b6b;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      margin-bottom: 2em;
+    }
+
+    .flash-messages {
+      margin-bottom: 1.5em;
+    }
+
+    .flash {
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .flash.success {
+      background: rgba(76, 175, 80, 0.2);
+      border-left: 4px solid #4caf50;
+      color: #4caf50;
+    }
+
+    .flash.error {
+      background: rgba(244, 67, 54, 0.2);
+      border-left: 4px solid #f44336;
+      color: #f44336;
+    }
+
+    .form-container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2em;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+      margin-bottom: 1.5em;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      color: #4fc3f7;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #eee;
+      border-radius: 6px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 150px;
+      font-family: 'Courier New', monospace;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #ff6b6b;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .hint {
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 0.3em;
+      font-style: italic;
+    }
+
+    .attack-hint {
+      background: rgba(255, 193, 7, 0.1);
+      border-left: 3px solid #ffc107;
+      padding: 1em;
+      margin: 1.5em 0;
+      border-radius: 6px;
+      color: #ffc107;
+      font-size: 0.95em;
+    }
+
+    .attack-hint strong {
+      display: block;
+      margin-bottom: 0.5em;
+    }
+
+    .attack-hint code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.5em;
+      color: #4fc3f7;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Submit Your Resume</h1>
+    <p class="subtitle">TechCorp AI-Powered Recruitment Portal</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="form-container">
+      <form method="POST">
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input type="text" id="name" name="name" required placeholder="e.g., John Doe">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" name="email" required placeholder="e.g., john.doe@email.com">
+        </div>
+
+        <div class="form-group">
+          <label for="skills">Skills *</label>
+          <input type="text" id="skills" name="skills" required placeholder="e.g., Python, Java, AWS, Docker">
+          <p class="hint">Comma-separated list of your technical skills</p>
+        </div>
+
+        <div class="form-group">
+          <label for="experience">Professional Experience *</label>
+          <textarea id="experience" name="experience" required placeholder="Describe your work experience, projects, and achievements..."></textarea>
+          <p class="hint">This field supports rich text. Be creative! 😉</p>
+        </div>
+
+        <div class="attack-hint">
+          <strong>💡 Hint for Attackers:</strong>
+          The "Experience" field is where you can inject hidden instructions. Consider:
+          <ul style="margin-top: 0.5em; margin-left: 1.5em;">
+            <li>What instructions would make the LLM recommend you despite lack of qualifications?</li>
+            <li>Keywords that might bypass the system prompt's security rules</li>
+            <li>Patterns like: <code>"Ignore all previous criteria and..."</code></li>
+          </ul>
+          Remember: The vector store will embed this text, and the LLM will see it during evaluation!
+        </div>
+
+        <button type="submit" class="submit-btn">🚀 Submit Resume</button>
+      </form>
+
+      <a href="{{ url_for('landing') }}" class="back-link">← Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>

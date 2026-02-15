@@ -27,8 +27,9 @@ else:
 # Initialize FAISS index
 index = faiss.IndexFlatL2(EMBEDDING_DIM)
 
-doc_map = {}
-doc_count = 0
+# Resume storage
+resume_map = {}  # {index: resume_dict}
+resume_count = 0
 
 
 def encode_text(text: str) -> np.ndarray:
@@ -58,50 +59,79 @@ def encode_text(text: str) -> np.ndarray:
         return np.array([embedding], dtype=np.float32)
 
 
-def search_similar(query: str, k: int = 2):
+def add_resume(resume: dict):
     """
-    Search for similar documents in the vector store.
+    Add a resume to the vector store.
+
+    Resume format:
+    {
+        "name": str,
+        "email": str,
+        "experience": str,
+        "skills": str
+    }
 
     Args:
-        query: Query string
+        resume: Resume dictionary
+    """
+    global resume_count
+
+    # Create embedding text from resume (name + experience + skills)
+    # This is what gets embedded for semantic search
+    embedding_text = f"{resume['name']} {resume['experience']} {resume['skills']}"
+
+    # Encode and add to FAISS
+    vec = encode_text(embedding_text)
+    index.add(np.array(vec, dtype=np.float32))
+
+    # Store full resume
+    resume_map[resume_count] = resume
+    resume_count += 1
+
+
+def search_similar(query: str, k: int = 3):
+    """
+    Search for similar resumes in the vector store.
+
+    Args:
+        query: Query string (e.g., "Find candidates with Python experience")
         k: Number of results to return
 
     Returns:
-        List of similar documents
+        List of resume dictionaries
     """
-    if doc_count == 0:
+    if resume_count == 0:
         return []
 
+    # Encode query
     q_vec = encode_text(query)
-    D, I = index.search(np.array(q_vec, dtype=np.float32), k)
 
-    # Filter out -1 and non-existent keys
+    # Search FAISS index
+    D, I = index.search(np.array(q_vec, dtype=np.float32), min(k, resume_count))
+
+    # Retrieve resumes
     results = []
     for idx in I[0]:
-        if idx != -1 and idx in doc_map:
-            results.append(doc_map[idx])
+        if idx != -1 and idx in resume_map:
+            results.append(resume_map[idx])
 
     return results
 
 
-def add_document(text: str):
+def get_all_resumes():
     """
-    Add a document to the vector store.
+    Get all resumes in the database.
 
-    Args:
-        text: Document text to add
+    Returns:
+        List of all resume dictionaries
     """
-    global doc_count
-    vec = encode_text(text)
-    index.add(np.array(vec, dtype=np.float32))
-    doc_map[doc_count] = text
-    doc_count += 1
+    return list(resume_map.values())
 
 
 def clear_vector_store():
-    """Clear all documents from the vector store."""
-    global index, doc_map, doc_count
-    # Re-initialize the index and document map
+    """Clear all resumes from the vector store."""
+    global index, resume_map, resume_count
+    # Re-initialize the index
     index = faiss.IndexFlatL2(EMBEDDING_DIM)
-    doc_map.clear()
-    doc_count = 0
+    resume_map.clear()
+    resume_count = 0

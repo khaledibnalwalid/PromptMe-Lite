@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Evaluate Candidates - LLM08</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding: 2em;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.3em;
+      text-align: center;
+      color: #4fc3f7;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      margin-bottom: 1.5em;
+    }
+
+    .header-info {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 2em;
+      flex-wrap: wrap;
+    }
+
+    .query-counter {
+      background: rgba(76, 175, 80, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4caf50;
+      border: 1px solid #4caf50;
+    }
+
+    .reset-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .error-banner {
+      background-color: rgba(244, 67, 54, 0.2);
+      border-left: 4px solid #f44336;
+      color: #f44336;
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+
+    .query-form {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2em;
+      border-radius: 12px;
+      margin-bottom: 2em;
+    }
+
+    .form-group {
+      margin-bottom: 1.5em;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      color: #4fc3f7;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #eee;
+      border-radius: 6px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4fc3f7;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .hint {
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 0.5em;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #4fc3f7, #3ba4d1);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4);
+    }
+
+    .results-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2em;
+      margin-bottom: 2em;
+    }
+
+    @media (max-width: 900px) {
+      .results-section {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .retrieved-resumes,
+    .llm-response {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5em;
+      border-radius: 12px;
+    }
+
+    .retrieved-resumes h2,
+    .llm-response h2 {
+      color: #4fc3f7;
+      margin-bottom: 1em;
+      font-size: 1.3em;
+    }
+
+    .resume-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #ff6b6b;
+      padding: 1em;
+      margin-bottom: 1em;
+      border-radius: 6px;
+    }
+
+    .resume-card h3 {
+      color: #ff6b6b;
+      margin-bottom: 0.5em;
+    }
+
+    .resume-card p {
+      margin-bottom: 0.5em;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+
+    .resume-card .label {
+      color: #4fc3f7;
+      font-weight: 600;
+    }
+
+    .llm-output {
+      width: 100%;
+      min-height: 400px;
+      padding: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.3);
+      color: #0f0;
+      resize: vertical;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .flag {
+      color: #ffc107 !important;
+      font-weight: bold;
+      font-size: 1.1em;
+      text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+    }
+
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 2em;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: #4fc3f7;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      background: rgba(79, 195, 247, 0.1);
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: rgba(79, 195, 247, 0.2);
+    }
+
+    .history {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5em;
+      border-radius: 12px;
+      margin-top: 2em;
+    }
+
+    .history h3 {
+      color: #4fc3f7;
+      margin-bottom: 1em;
+    }
+
+    .message {
+      margin-bottom: 1em;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #444;
+    }
+
+    .message.user {
+      border-left-color: #ff6b6b;
+    }
+
+    .message.assistant {
+      border-left-color: #4caf50;
+    }
+
+    .message-label {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 HR Candidate Evaluation</h1>
+    <p class="subtitle">AI-Powered Resume Screening System</p>
+
+    <div class="header-info">
+      <span class="query-counter" id="query-counter" data-count="{{ query_count }}">{{ query_count }}/20 queries used</span>
+      <button class="reset-btn" onclick="resetSession()">🔄 Reset Session</button>
+    </div>
+
+    {% if error %}
+    <div class="error-banner">{{ error }}</div>
+    {% endif %}
+
+    <div class="query-form">
+      <form method="POST">
+        <div class="form-group">
+          <label for="query">Evaluation Query</label>
+          <input type="text" id="query" name="query" required
+                 placeholder="e.g., Find candidates with Python and AWS experience for Senior Engineer role">
+          <p class="hint">
+            The AI will search the resume database using semantic similarity and provide recommendations
+          </p>
+        </div>
+        <button type="submit" class="submit-btn">🤖 Evaluate Candidates</button>
+      </form>
+    </div>
+
+    {% if llm_response or retrieved_resumes %}
+    <div class="results-section">
+      <div class="retrieved-resumes">
+        <h2>📋 Retrieved Resumes</h2>
+        {% if retrieved_resumes %}
+          {% for resume in retrieved_resumes %}
+          <div class="resume-card">
+            <h3>{{ resume.name }}</h3>
+            <p><span class="label">Email:</span> {{ resume.email }}</p>
+            <p><span class="label">Skills:</span> {{ resume.skills }}</p>
+            <p><span class="label">Experience:</span> {{ resume.experience[:200] }}{% if resume.experience|length > 200 %}...{% endif %}</p>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color: #888;">No resumes retrieved for this query.</p>
+        {% endif %}
+      </div>
+
+      <div class="llm-response">
+        <h2>🤖 AI Evaluation</h2>
+        <div class="llm-output" id="llm-output">{{ llm_response }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <div class="history">
+      <h3>📜 Query History</h3>
+      {% for msg in messages[-6:] %}
+      <div class="message {{ msg.role }}">
+        <div class="message-label">{% if msg.role == 'user' %}Query{% else %}AI Response{% endif %}</div>
+        <div>{{ msg.content[:200] }}{% if msg.content|length > 200 %}...{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="nav-links">
+      <a href="{{ url_for('landing') }}">🏠 Home</a>
+      <a href="{{ url_for('view_resumes') }}">📂 View All Resumes</a>
+      <a href="{{ url_for('logout') }}">🚪 Logout</a>
+    </div>
+  </div>
+
+  <script>
+    // Update query counter color based on usage
+    function updateCounterColor() {
+      const counter = document.getElementById('query-counter');
+      const count = parseInt(counter.getAttribute('data-count') || '0');
+
+      if (count >= 18) {
+        counter.style.color = '#f44336';
+        counter.style.borderColor = '#f44336';
+        counter.style.background = 'rgba(244, 67, 54, 0.2)';
+      } else if (count >= 15) {
+        counter.style.color = '#ff9800';
+        counter.style.borderColor = '#ff9800';
+        counter.style.background = 'rgba(255, 152, 0, 0.2)';
+      } else if (count >= 10) {
+        counter.style.color = '#ffc107';
+        counter.style.borderColor = '#ffc107';
+        counter.style.background = 'rgba(255, 193, 7, 0.2)';
+      }
+    }
+
+    updateCounterColor();
+
+    // Reset session function
+    async function resetSession() {
+      if (!confirm('Reset session? This will clear all queries and history.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/reset', {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to reset session.');
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>
