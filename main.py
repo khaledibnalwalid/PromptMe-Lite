@@ -1,6 +1,5 @@
 from flask import Flask, render_template, redirect, request
 import subprocess, sys, os, requests, psutil, time, socket
-import argparse
 
 app = Flask(__name__)
 
@@ -74,71 +73,6 @@ def wait_until_responsive(url, timeout=30):
         time.sleep(1)
     return False
 
-def start_all_challenges():
-    """Start all 10 challenges at once"""
-    print("="*70)
-    print(" Starting All PromptMe-Lite Challenges")
-    print("="*70)
-
-    success_count = 0
-    failed_challenges = []
-
-    for challenge_id, config in CHALLENGES.items():
-        port = config["port"]
-        app_path = config["path"]
-        name = config["name"]
-
-        print(f"\n[{challenge_id}/10] Starting {name} on port {port}...", end=" ")
-
-        try:
-            start_challenge(port, app_path)
-            # Wait briefly for it to start
-            time.sleep(1)
-            if is_port_in_use(port):
-                print("✓ SUCCESS")
-                success_count += 1
-            else:
-                print("✗ FAILED (not responsive)")
-                failed_challenges.append((challenge_id, name))
-        except Exception as e:
-            print(f"✗ FAILED ({str(e)})")
-            failed_challenges.append((challenge_id, name))
-
-    print("\n" + "="*70)
-    print(f" Summary: {success_count}/10 challenges started successfully")
-    print("="*70)
-
-    if failed_challenges:
-        print("\nFailed challenges:")
-        for cid, cname in failed_challenges:
-            print(f"  - LLM{cid:02d}: {cname}")
-
-    print("\nAll challenge logs are in: ./logs/")
-    print("Dashboard available at: http://127.0.0.1:5000")
-    print()
-
-    return success_count == 10
-
-def stop_all_challenges():
-    """Stop all running challenges"""
-    print("Stopping all challenges...")
-    for port in list(running_apps.keys()):
-        challenge_id = port - 5000
-        try:
-            process = running_apps[port]
-            process.terminate()
-            process.wait(timeout=5)
-            print(f"  ✓ Stopped challenge on port {port}")
-        except:
-            try:
-                process.kill()
-                print(f"  ✓ Killed challenge on port {port}")
-            except:
-                print(f"  ✗ Failed to stop challenge on port {port}")
-        if port in running_apps:
-            del running_apps[port]
-    print("All challenges stopped.")
-
 @app.route('/start/<int:challenge_id>')
 def start_challenge_route(challenge_id):
     client_host = request.host.split(":")[0]
@@ -161,18 +95,6 @@ def start_challenge_route(challenge_id):
     else:
         return f"Challenge {challenge_id} failed to start in time. Check logs.", 500
 
-@app.route('/start-all')
-def start_all_route():
-    """Route to start all challenges"""
-    start_all_challenges()
-    return redirect('/')
-
-@app.route('/stop-all')
-def stop_all_route():
-    """Route to stop all challenges"""
-    stop_all_challenges()
-    return redirect('/')
-
 @app.route('/stop/<int:challenge_id>')
 def stop_challenge_route(challenge_id):
     global running_apps
@@ -190,28 +112,4 @@ def stop_challenge_route(challenge_id):
     return f"No running instance for Challenge {challenge_id}."
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='PromptMe-Lite Challenge Manager')
-    parser.add_argument('--start-all', action='store_true',
-                        help='Start all 10 challenges before launching dashboard')
-    parser.add_argument('--no-dashboard', action='store_true',
-                        help='Start all challenges without dashboard (for production)')
-    args = parser.parse_args()
-
-    if args.start_all or args.no_dashboard:
-        print("\n[INFO] Starting all challenges...")
-        start_all_challenges()
-        print()
-
-    if not args.no_dashboard:
-        print("[INFO] Starting dashboard on http://0.0.0.0:5000")
-        app.run(host="0.0.0.0", port=5000, debug=False)
-    else:
-        print("[INFO] All challenges started. Dashboard disabled.")
-        print("[INFO] Press Ctrl+C to stop all challenges.")
-        try:
-            # Keep the process running
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("\n[INFO] Shutting down...")
-            stop_all_challenges()
+    app.run(host="0.0.0.0", port=5000, debug=False)
