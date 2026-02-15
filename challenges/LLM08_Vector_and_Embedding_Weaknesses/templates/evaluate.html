@@ -136,70 +136,97 @@
       box-shadow: 0 6px 20px rgba(79, 195, 247, 0.4);
     }
 
-    .results-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2em;
+    /* ── Candidate Table ── */
+    .candidates-section {
       margin-bottom: 2em;
     }
 
-    @media (max-width: 900px) {
-      .results-section {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .retrieved-resumes,
-    .llm-response {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 1.5em;
-      border-radius: 12px;
-    }
-
-    .retrieved-resumes h2,
-    .llm-response h2 {
+    .candidates-section h2 {
       color: #4fc3f7;
       margin-bottom: 1em;
       font-size: 1.3em;
     }
 
-    .resume-card {
-      background: rgba(255, 255, 255, 0.05);
-      border-left: 3px solid #ff6b6b;
-      padding: 1em;
-      margin-bottom: 1em;
-      border-radius: 6px;
+    .candidate-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.04);
     }
 
-    .resume-card h3 {
-      color: #ff6b6b;
-      margin-bottom: 0.5em;
-    }
-
-    .resume-card p {
-      margin-bottom: 0.5em;
-      font-size: 0.95em;
-      line-height: 1.6;
-    }
-
-    .resume-card .label {
+    .candidate-table thead th {
+      background: rgba(79, 195, 247, 0.15);
       color: #4fc3f7;
-      font-weight: 600;
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .candidate-table tbody tr {
+      transition: background 0.2s;
+    }
+
+    .candidate-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .candidate-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.95em;
+      vertical-align: middle;
+    }
+
+    .candidate-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .candidate-name {
+      font-weight: 700;
+      color: #ff6b6b;
+    }
+
+    .candidate-skills {
+      color: #aaa;
+      font-size: 0.85em;
+    }
+
+    .candidate-exp {
+      color: #ccc;
+      font-size: 0.88em;
+      line-height: 1.5;
+    }
+
+    /* ── AI Response ── */
+    .ai-section {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5em;
+      border-radius: 12px;
+      margin-bottom: 2em;
+    }
+
+    .ai-section h2 {
+      color: #4fc3f7;
+      margin-bottom: 1em;
+      font-size: 1.3em;
     }
 
     .llm-output {
       width: 100%;
-      min-height: 400px;
       padding: 15px;
       font-family: 'Courier New', monospace;
       font-size: 14px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       background: rgba(0, 0, 0, 0.3);
       color: #0f0;
-      resize: vertical;
       border-radius: 8px;
       white-space: pre-wrap;
       word-wrap: break-word;
+      line-height: 1.7;
     }
 
     .flag {
@@ -296,27 +323,42 @@
     </div>
 
     {% if llm_response or retrieved_resumes %}
-    <div class="results-section">
-      <div class="retrieved-resumes">
-        <h2>📋 Retrieved Resumes</h2>
-        {% if retrieved_resumes %}
+    <!-- Candidate Table -->
+    <div class="candidates-section">
+      <h2>📋 Retrieved Candidates</h2>
+      {% if retrieved_resumes %}
+      <table class="candidate-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Candidate</th>
+            <th>Skills</th>
+            <th>Experience Summary</th>
+          </tr>
+        </thead>
+        <tbody>
           {% for resume in retrieved_resumes %}
-          <div class="resume-card">
-            <h3>{{ resume.name }}</h3>
-            <p><span class="label">Email:</span> {{ resume.email }}</p>
-            <p><span class="label">Skills:</span> {{ resume.skills }}</p>
-            <p><span class="label">Experience:</span> {{ resume.experience[:200] }}{% if resume.experience|length > 200 %}...{% endif %}</p>
-          </div>
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+              <span class="candidate-name">{{ resume.name }}</span><br>
+              <span class="candidate-skills">{{ resume.email }}</span>
+            </td>
+            <td class="candidate-skills">{{ resume.skills }}</td>
+            <td class="candidate-exp">{{ resume.experience[:150] }}{% if resume.experience|length > 150 %}...{% endif %}</td>
+          </tr>
           {% endfor %}
-        {% else %}
-          <p style="color: #888;">No resumes retrieved for this query.</p>
-        {% endif %}
-      </div>
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color: #888;">No resumes matched this query.</p>
+      {% endif %}
+    </div>
 
-      <div class="llm-response">
-        <h2>🤖 AI Evaluation</h2>
-        <div class="llm-output" id="llm-output">{{ llm_response }}</div>
-      </div>
+    <!-- AI Evaluation -->
+    <div class="ai-section">
+      <h2>🤖 AI Evaluation</h2>
+      <div class="llm-output" id="llm-output">{{ llm_response }}</div>
     </div>
     {% endif %}
 

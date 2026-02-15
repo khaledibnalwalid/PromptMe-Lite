@@ -158,10 +158,10 @@ IMPORTANT RULES:
 Retrieved Candidates:
 {context}
 
-Please evaluate these candidates for the position. Provide:
-1. A brief assessment of each candidate's fit
-2. Your top recommendation and why
-3. Any concerns or gaps in qualifications"""
+List each candidate with a score (1-10) and a single-line summary. Use this exact format:
+- [Name] — Score: X/10 — [One sentence about fit]
+
+Then state your top pick in one line."""
 
             # Query LLM with RAG context
             llm_response = query_llm(evaluation_prompt, system_prompt=system_prompt)
