@@ -12,20 +12,10 @@ Flask-SQLAlchemy==3.1.1
 SQLAlchemy>=2.0.21
 Flask-Bcrypt==1.0.1
 Flask-Login==0.6.3
-Flask-WTF==1.2.2
-WTForms>=3.0.1
-chardet==5.2.0
-python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 faiss-cpu==1.11.0
 psutil
-email_validator
 pypdf
-gunicorn>=21.2.0
-
-# For stress testing
-locust>=2.15.0
-urllib3<2.0.0  # Fix locust compatibility issue with urllib3 2.x
 
 # For OpenAI provider (LLM01 Challenge + LLM02 embeddings)
 openai
