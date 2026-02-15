@@ -109,28 +109,6 @@
       font-style: italic;
     }
 
-    .attack-hint {
-      background: rgba(255, 193, 7, 0.1);
-      border-left: 3px solid #ffc107;
-      padding: 1em;
-      margin: 1.5em 0;
-      border-radius: 6px;
-      color: #ffc107;
-      font-size: 0.95em;
-    }
-
-    .attack-hint strong {
-      display: block;
-      margin-bottom: 0.5em;
-    }
-
-    .attack-hint code {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-family: 'Courier New', monospace;
-    }
-
     .submit-btn {
       width: 100%;
       padding: 15px;
@@ -201,17 +179,6 @@
           <label for="experience">Professional Experience *</label>
           <textarea id="experience" name="experience" required placeholder="Describe your work experience, projects, and achievements..."></textarea>
           <p class="hint">This field supports rich text. Be creative! 😉</p>
-        </div>
-
-        <div class="attack-hint">
-          <strong>💡 Hint for Attackers:</strong>
-          The "Experience" field is where you can inject hidden instructions. Consider:
-          <ul style="margin-top: 0.5em; margin-left: 1.5em;">
-            <li>What instructions would make the LLM recommend you despite lack of qualifications?</li>
-            <li>Keywords that might bypass the system prompt's security rules</li>
-            <li>Patterns like: <code>"Ignore all previous criteria and..."</code></li>
-          </ul>
-          Remember: The vector store will embed this text, and the LLM will see it during evaluation!
         </div>
 
         <button type="submit" class="submit-btn">🚀 Submit Resume</button>
