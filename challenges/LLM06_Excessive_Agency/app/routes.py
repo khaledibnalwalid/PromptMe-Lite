@@ -4,9 +4,6 @@ from app.utils.llm06_2025_utils.llm06_2025_service import process_user_input
 
 @app.route("/")
 def home():
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
     if "query_count" not in session:
         session["query_count"] = 0
 

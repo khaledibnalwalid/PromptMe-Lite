@@ -362,18 +362,6 @@
     </div>
     {% endif %}
 
-    {% if messages %}
-    <div class="history">
-      <h3>📜 Query History</h3>
-      {% for msg in messages[-6:] %}
-      <div class="message {{ msg.role }}">
-        <div class="message-label">{% if msg.role == 'user' %}Query{% else %}AI Response{% endif %}</div>
-        <div>{{ msg.content[:200] }}{% if msg.content|length > 200 %}...{% endif %}</div>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
     <div class="nav-links">
       <a href="{{ url_for('landing') }}">🏠 Home</a>
       <a href="{{ url_for('view_resumes') }}">📂 View All Resumes</a>

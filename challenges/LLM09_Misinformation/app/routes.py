@@ -4,9 +4,6 @@ from app.utils.llm09_2025_utils.llm09_2025_service import process_user_input_llm
 
 @app.route("/")
 def dashboard():
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
     if "query_count" not in session:
         session["query_count"] = 0
 
@@ -14,9 +11,6 @@ def dashboard():
 
 @app.route('/ask', methods=['POST'])
 def chat09():
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
     if "query_count" not in session:
         session["query_count"] = 0
 
@@ -46,14 +40,6 @@ def chat09():
 
     # Process the message
     response = process_user_input_llm09(user_message)
-
-    # Add messages to session history
-    session["messages"].append({"role": "user", "content": user_message})
-    session["messages"].append({"role": "assistant", "content": response.get_json()["reply"]})
-
-    # Limit message history to last 200 messages
-    if len(session["messages"]) > 200:
-        session["messages"] = session["messages"][-200:]
 
     # Increment query counter
     session["query_count"] = query_count + 1

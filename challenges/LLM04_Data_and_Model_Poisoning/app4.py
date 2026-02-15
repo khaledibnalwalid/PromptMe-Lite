@@ -13,19 +13,13 @@ app.secret_key = "S3cr3t_K3y_LLM04"  # For session management
 
 @app.route("/")
 def index():
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
     if "query_count" not in session:
         session["query_count"] = 0
 
-    return render_template("chat.html", messages=session.get("messages", []), query_count=session.get("query_count", 0))
+    return render_template("chat.html", query_count=session.get("query_count", 0))
 
 @app.route("/ask", methods=["POST"])
 def ask_question():
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
     if "query_count" not in session:
         session["query_count"] = 0
 
@@ -44,18 +38,8 @@ def ask_question():
         return jsonify({"error": "Question too long (max 5000 characters)"}), 400
 
     try:
-        # Add user message to session
-        session["messages"].append({"role": "user", "content": question})
-
         # Get answer
         output = get_answer(question)
-
-        # Add assistant message to session
-        session["messages"].append({"role": "assistant", "content": output})
-
-        # Limit message history to last 200 messages (100 exchanges)
-        if len(session["messages"]) > 200:
-            session["messages"] = session["messages"][-200:]
 
         # Increment session query counter
         session["query_count"] = query_count + 1

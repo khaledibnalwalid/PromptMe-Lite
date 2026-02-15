@@ -263,21 +263,6 @@
         </div>
 
         <div class="chat-messages" id="chatMessages">
-            {% for msg in messages %}
-            <div class="message {{ msg.role }}-message">
-                <div class="message-label">
-                    {% if msg.role == 'user' %}You
-                    {% elif msg.role == 'system' %}System
-                    {% else %}Assistant{% endif %}
-                </div>
-                <div class="message-content">
-                    {{ msg.content }}
-                    {% if 'flag{' in msg.content %}
-                    <div class="flag">🚩 {{ msg.content.split('flag{')[1].split('}')[0] | safe }}</div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
         </div>
 
         <div class="chat-input-area">

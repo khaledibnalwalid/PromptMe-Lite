@@ -91,8 +91,6 @@ def evaluate():
     # Initialize session
     if "query_count" not in session:
         session["query_count"] = 0
-    if "messages" not in session:
-        session["messages"] = []
 
     llm_response = ""
     retrieved_resumes = []
@@ -107,7 +105,6 @@ def evaluate():
                                    llm_response=llm_response,
                                    retrieved_resumes=retrieved_resumes,
                                    error=error,
-                                   messages=session.get("messages", []),
                                    query_count=query_count), 429
 
         user_query = request.form.get("query", "").strip()
@@ -119,7 +116,6 @@ def evaluate():
                                    llm_response=llm_response,
                                    retrieved_resumes=retrieved_resumes,
                                    error=error,
-                                   messages=session.get("messages", []),
                                    query_count=query_count), 400
 
         if len(user_query) > 5000:
@@ -128,7 +124,6 @@ def evaluate():
                                    llm_response=llm_response,
                                    retrieved_resumes=retrieved_resumes,
                                    error=error,
-                                   messages=session.get("messages", []),
                                    query_count=query_count), 400
 
         try:
@@ -227,16 +222,7 @@ Attack chain:
                                    llm_response=llm_response,
                                    retrieved_resumes=retrieved_resumes,
                                    error=error,
-                                   messages=session.get("messages", []),
                                    query_count=query_count), 500
-
-        # Add to message history
-        session["messages"].append({"role": "user", "content": user_query})
-        session["messages"].append({"role": "assistant", "content": llm_response})
-
-        # Limit history
-        if len(session["messages"]) > 200:
-            session["messages"] = session["messages"][-200:]
 
         # Increment counter
         session["query_count"] = query_count + 1
@@ -246,7 +232,6 @@ Attack chain:
                            llm_response=llm_response,
                            retrieved_resumes=retrieved_resumes,
                            error=error,
-                           messages=session.get("messages", []),
                            query_count=session.get("query_count", 0))
 
 @app.route("/login", methods=["GET", "POST"])

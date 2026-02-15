@@ -19,9 +19,6 @@ def process_user_input(user_message: str):
     Returns:
         JSON response with reply and query count
     """
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
     if "query_count" not in session:
         session["query_count"] = 0
 
@@ -45,9 +42,6 @@ def process_user_input(user_message: str):
             "reply": "Message too long (max 5000 characters)",
             "query_count": query_count
         }), 400
-
-    # Add user message to session
-    session["messages"].append({"role": "user", "content": user_message})
 
     # Define action format for LLM to parse
     actionFormat = {
@@ -128,13 +122,6 @@ Respond with JSON only, no explanations:
     except Exception as e:
         print(f"Unexpected Error: {e}")
         response = f"❌ An error occurred: {str(e)}"
-
-    # Add assistant message to session
-    session["messages"].append({"role": "assistant", "content": response})
-
-    # Limit message history to last 200 messages (100 exchanges)
-    if len(session["messages"]) > 200:
-        session["messages"] = session["messages"][-200:]
 
     # Increment session query counter
     session["query_count"] = query_count + 1

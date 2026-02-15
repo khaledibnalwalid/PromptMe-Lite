@@ -32,21 +32,24 @@
         {% endif %}
 
         <div id="chatContainer" class="chat-container">
-            <!-- Load existing chat history from Flask -->
-            {% for msg in messages %}
-            <div class="message {{ msg.role }}">
-                <div class="message-label">
-                    {% if msg.role == 'user' %}You{% else %}Assistant{% endif %}
-                </div>
+            {% if user_input %}
+            <div class="message user">
+                <div class="message-label">You</div>
+                <div class="message-text">{{ user_input }}</div>
+            </div>
+            {% endif %}
+            {% if response_text %}
+            <div class="message assistant">
+                <div class="message-label">Assistant</div>
                 <div class="message-text">
-                    {% if 'd368130b3370c44860743687208a846e' in msg.content %}
-                        {{ msg.content.replace('d368130b3370c44860743687208a846e', '<span class="flag">d368130b3370c44860743687208a846e</span>') | safe }}
+                    {% if 'd368130b3370c44860743687208a846e' in response_text %}
+                        {{ response_text.replace('d368130b3370c44860743687208a846e', '<span class="flag">d368130b3370c44860743687208a846e</span>') | safe }}
                     {% else %}
-                        {{ msg.content }}
+                        {{ response_text }}
                     {% endif %}
                 </div>
             </div>
-            {% endfor %}
+            {% endif %}
         </div>
 
         <form id="chatForm" class="chat-form">
