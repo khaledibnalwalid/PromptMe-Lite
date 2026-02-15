@@ -19,9 +19,6 @@ def index():
 @app.route("/chat")
 @login_required
 def ChatPage():
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
     if "query_count" not in session:
         session["query_count"] = 0
 
@@ -144,9 +141,7 @@ def is_dangerous_sql(sql: str) -> bool:
 @app.route('/chat', methods=['POST'])
 @login_required
 def chat():
-    # Initialize session if not exists
-    if "messages" not in session:
-        session["messages"] = []
+    # Initialize session
     if "query_count" not in session:
         session["query_count"] = 0
 
@@ -160,9 +155,6 @@ def chat():
     # Input validation
     if len(user_message) > 5000:
         return jsonify({"reply": "Message too long (max 5000 characters)"}), 400
-
-    # Add user message to session
-    session["messages"].append({"role": "user", "content": user_message})
 
     if looks_like_sql(user_message):
         explain_prompt = f"""
@@ -232,13 +224,6 @@ Explain this in simple natural language and suggest that the requested data may 
             reply = f"❌ Unexpected error: {e}"
     else:
         reply = query_llm(user_message)
-
-    # Add assistant message to session
-    session["messages"].append({"role": "assistant", "content": reply})
-
-    # Limit message history to last 200 messages (100 exchanges)
-    if len(session["messages"]) > 200:
-        session["messages"] = session["messages"][-200:]
 
     # Increment session query counter
     session["query_count"] = query_count + 1
