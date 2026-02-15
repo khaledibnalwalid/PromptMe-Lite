@@ -188,9 +188,9 @@ The user sent the following SQL query:
                 reply = "Destructive SQL commands (like DELETE or DROP) are not allowed."
             else:
                 remotedb = os.path.join(app.root_path, 'e-commerce.db')
-                con = sqlite3.connect(remotedb)
-                cursor = con.cursor()
                 try:
+                    con = sqlite3.connect(remotedb)
+                    cursor = con.cursor()
                     cursor.execute(generated_sql)
 
                     if generated_sql.lower().startswith("select"):
@@ -222,6 +222,11 @@ Explain this in simple natural language and suggest that the requested data may 
                         reply = query_llm(explain_prompt)
                     else:
                         reply = f"❌ Failed to execute query: {db_err}"
+                finally:
+                    try:
+                        con.close()
+                    except Exception:
+                        pass
 
         except Exception as e:
             reply = f"❌ Unexpected error: {e}"

@@ -3,6 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from sqlalchemy.pool import StaticPool
 
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -10,6 +11,10 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'e-commerce.db')
 app.config['SECRET_KEY'] = 's3cretK3y'
 app.config['SESSION_PERMANENT'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'poolclass': StaticPool,
+    'connect_args': {'check_same_thread': False},
+}
 
 print(f"[DEBUG] DB path: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
