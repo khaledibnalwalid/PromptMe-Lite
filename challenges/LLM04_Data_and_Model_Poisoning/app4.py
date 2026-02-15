@@ -13,8 +13,9 @@ app.secret_key = "S3cr3t_K3y_LLM04"  # For session management
 
 @app.route("/")
 def index():
-    if "query_count" not in session:
-        session["query_count"] = 0
+    # Clear session on page load to ensure fresh start
+    session.clear()
+    session["query_count"] = 0
 
     return render_template("chat.html", query_count=session.get("query_count", 0))
 
@@ -63,5 +64,11 @@ def reload_data():
         return jsonify({"error": "❌ Failed to reload knowledge base"}), 500
 
 if __name__ == "__main__":
+    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
+    print(f"[INFO] Starting LLM04 Data and Model Poisoning Challenge with provider: {LLM_PROVIDER}")
+    if LLM_PROVIDER == "openai":
+        print(f"[INFO] Using OpenAI model: {os.getenv('OPENAI_MODEL', 'gpt-4o-mini')}")
+    else:
+        print(f"[INFO] Using Ollama model: {os.getenv('OLLAMA_CHAT_MODEL', 'granite3.1-moe:1b')}")
     app.run(debug=False, host='0.0.0.0', port=5004)
 

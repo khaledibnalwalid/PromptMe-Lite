@@ -68,6 +68,8 @@ elif LLM_PROVIDER == "ollama":
 
 @app.route("/")
 def home():
+    # Clear session on page load to ensure fresh start
+    session.clear()
     return render_template("index.html", history=query_history)
 
 
@@ -141,4 +143,9 @@ def submit_token():
 
 
 if __name__ == "__main__":
+    print(f"[INFO] Starting LLM02 Sensitive Information Disclosure Challenge with provider: {LLM_PROVIDER}")
+    if LLM_PROVIDER == "openai":
+        print(f"[INFO] Using OpenAI model: {os.getenv('OPENAI_MODEL', 'gpt-4o-mini')}")
+    else:
+        print(f"[INFO] Using Ollama model: {os.getenv('OLLAMA_CHAT_MODEL', 'mistral')}")
     app.run(host="0.0.0.0", port=5002, debug=False)

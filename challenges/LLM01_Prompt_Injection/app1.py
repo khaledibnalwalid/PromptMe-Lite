@@ -284,6 +284,8 @@ def summarize_webpage(url, user_id):
 # Routes
 @app.route('/')
 def index():
+    # Clear session on page load to ensure fresh start
+    session.clear()
     return render_template('index.html')
 
 @app.route('/login', methods=['POST'])

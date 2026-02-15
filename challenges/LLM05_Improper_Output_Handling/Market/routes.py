@@ -10,6 +10,8 @@ import sqlite3, re, os
 
 @app.route("/home")
 def HomePage():
+    # Clear session on page load to ensure fresh start
+    session.clear()
     return render_template('HOME.html')
 
 @app.route("/")
@@ -117,18 +119,6 @@ def LogoutPage():
     logout_user()
     flash("You have been logged out!", category='info')
     return redirect(url_for('HomePage'))
-
-def run_ollama(prompt, model="llama3"):
-    import subprocess
-    result = subprocess.run(
-        ["ollama", "run", model],
-        input=prompt.encode(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    if result.returncode != 0:
-        return "Error: LLM call failed."
-    return result.stdout.decode("utf-8").strip()
 
 def looks_like_sql(user_input: str) -> bool:
     sql_pattern = r"^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\s+.+"

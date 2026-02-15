@@ -4,8 +4,9 @@ from app.utils.llm09_2025_utils.llm09_2025_service import process_user_input_llm
 
 @app.route("/")
 def dashboard():
-    if "query_count" not in session:
-        session["query_count"] = 0
+    # Clear session on page load to ensure fresh start
+    session.clear()
+    session["query_count"] = 0
 
     return render_template("index.html", query_count=session.get("query_count", 0))
 

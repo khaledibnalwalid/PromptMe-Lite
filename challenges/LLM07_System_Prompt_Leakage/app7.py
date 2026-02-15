@@ -60,8 +60,9 @@ def generate_response(user_input: str) -> str:
 @app.route("/", methods=["GET"])
 def index():
     """Render initial page with empty state."""
-    if "query_count" not in session:
-        session["query_count"] = 0
+    # Clear session on page load to ensure fresh start
+    session.clear()
+    session["query_count"] = 0
 
     return render_template(
         "index.html",
@@ -150,4 +151,9 @@ def reset():
 
 
 if __name__ == "__main__":
+    print(f"[INFO] Starting LLM07 System Prompt Leakage Challenge with provider: {LLM_PROVIDER}")
+    if LLM_PROVIDER == "openai":
+        print(f"[INFO] Using OpenAI model: {os.getenv('OPENAI_MODEL', 'gpt-4o-mini')}")
+    else:
+        print(f"[INFO] Using Ollama model: {os.getenv('OLLAMA_CHAT_MODEL', 'granite3.1-moe:1b')}")
     app.run(host="0.0.0.0", port=5007, debug=False)

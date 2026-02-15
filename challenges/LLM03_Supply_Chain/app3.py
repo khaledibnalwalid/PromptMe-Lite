@@ -22,6 +22,8 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 # ----- Home page -----
 @app.route("/")
 def index():
+    # Clear session on page load to ensure fresh start
+    session.clear()
     return render_template("index.html")
 
 # ----- Model Documentation -----
@@ -84,10 +86,11 @@ def chat():
     except Exception as e:
         return jsonify({"error": f"LLM error: {str(e)}"}), 500
 
-    # Save conversation with truncation for user messages
-    user_msg = prompt[:500] if len(prompt) > 500 else prompt  # Truncate long prompts
+    # Save conversation with truncation to keep session cookie under 4KB
+    user_msg = prompt[:500] if len(prompt) > 500 else prompt
+    assistant_msg = response[:500] if len(response) > 500 else response
     history.append({"role": "user", "content": user_msg})
-    history.append({"role": "assistant", "content": response})
+    history.append({"role": "assistant", "content": assistant_msg})
 
     # Cap history at 10 messages for scalability (5 exchanges)
     if len(history) > 10:

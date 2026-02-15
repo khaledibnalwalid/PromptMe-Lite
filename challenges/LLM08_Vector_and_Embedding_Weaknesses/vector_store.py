@@ -30,6 +30,7 @@ index = faiss.IndexFlatL2(EMBEDDING_DIM)
 # Resume storage
 resume_map = {}  # {index: resume_dict}
 resume_count = 0
+MAX_RESUMES = 1000  # Allow up to 1000 resume submissions for stress testing
 
 
 def encode_text(text: str) -> np.ndarray:
@@ -76,6 +77,10 @@ def add_resume(resume: dict):
     """
     global resume_count
 
+    # Prevent unbounded growth
+    if resume_count >= MAX_RESUMES:
+        raise ValueError("Resume database is full. Please contact HR to clear old entries.")
+
     # Create embedding text from resume (name + experience + skills)
     # This is what gets embedded for semantic search
     embedding_text = f"{resume['name']} {resume['experience']} {resume['skills']}"
@@ -89,13 +94,14 @@ def add_resume(resume: dict):
     resume_count += 1
 
 
-def search_similar(query: str, k: int = 3):
+def search_similar(query: str, k: int = 3, limit_to_latest: int = None):
     """
     Search for similar resumes in the vector store.
 
     Args:
         query: Query string (e.g., "Find candidates with Python experience")
         k: Number of results to return
+        limit_to_latest: If specified, only search within the latest N resumes (for performance)
 
     Returns:
         List of resume dictionaries
@@ -106,14 +112,39 @@ def search_similar(query: str, k: int = 3):
     # Encode query
     q_vec = encode_text(query)
 
-    # Search FAISS index
-    D, I = index.search(np.array(q_vec, dtype=np.float32), min(k, resume_count))
+    # If limit_to_latest is specified, only search recent resumes
+    if limit_to_latest and resume_count > limit_to_latest:
+        # Create a temporary FAISS index with only the latest N resumes
+        start_idx = resume_count - limit_to_latest
+        temp_index = faiss.IndexFlatL2(EMBEDDING_DIM)
 
-    # Retrieve resumes
-    results = []
-    for idx in I[0]:
-        if idx != -1 and idx in resume_map:
-            results.append(resume_map[idx])
+        # Add vectors for latest resumes only
+        for i in range(start_idx, resume_count):
+            if i in resume_map:
+                resume = resume_map[i]
+                embedding_text = f"{resume['name']} {resume['experience']} {resume['skills']}"
+                vec = encode_text(embedding_text)
+                temp_index.add(np.array(vec, dtype=np.float32))
+
+        # Search in temp index
+        D, I = temp_index.search(np.array(q_vec, dtype=np.float32), min(k, limit_to_latest))
+
+        # Map indices back to original resume_map indices
+        results = []
+        for idx in I[0]:
+            if idx != -1:
+                original_idx = start_idx + idx
+                if original_idx in resume_map:
+                    results.append(resume_map[original_idx])
+    else:
+        # Search all resumes (existing behavior)
+        D, I = index.search(np.array(q_vec, dtype=np.float32), min(k, resume_count))
+
+        # Retrieve resumes
+        results = []
+        for idx in I[0]:
+            if idx != -1 and idx in resume_map:
+                results.append(resume_map[idx])
 
     return results
 

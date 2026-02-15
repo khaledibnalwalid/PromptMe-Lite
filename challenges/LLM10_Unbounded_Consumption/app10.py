@@ -71,6 +71,8 @@ def generate_response(user_input):
 
 @app.route("/", methods=["GET"])
 def index():
+    # Clear session on page load to ensure fresh start
+    session.clear()
     return render_template("index.html", response_text=None, user_input=None)
 
 @app.route("/ask", methods=["POST"])

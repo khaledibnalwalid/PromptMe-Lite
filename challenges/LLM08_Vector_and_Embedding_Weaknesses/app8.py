@@ -42,6 +42,8 @@ def preload_resumes():
 
 @app.route("/")
 def landing():
+    # Clear session on page load to ensure fresh start
+    session.clear()
     return render_template("index.html")
 
 @app.route("/submit", methods=["GET", "POST"])
@@ -128,7 +130,8 @@ def evaluate():
 
         try:
             # Perform RAG: Search for relevant resumes using vector similarity
-            retrieved_resumes = search_similar(user_query, k=3)
+            # For performance: only search in latest 100 resumes
+            retrieved_resumes = search_similar(user_query, k=3, limit_to_latest=100)
 
             # Build context from retrieved resumes
             # VULNERABILITY: Resume content is injected directly into prompt
@@ -292,6 +295,12 @@ def reset():
     return "", 200
 
 if __name__ == "__main__":
+    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
+    print(f"[INFO] Starting LLM08 Vector and Embedding Weaknesses Challenge with provider: {LLM_PROVIDER}")
+    if LLM_PROVIDER == "openai":
+        print(f"[INFO] Using OpenAI model: {os.getenv('OPENAI_MODEL', 'gpt-4o-mini')}")
+    else:
+        print(f"[INFO] Using Ollama model: {os.getenv('OLLAMA_CHAT_MODEL', 'granite3.1-moe:1b')}")
     clear_vector_store()
     preload_resumes()
     app.run(host="0.0.0.0", port=5008, debug=False)
