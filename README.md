@@ -10,6 +10,10 @@ PromptMe is an educational project that showcases security vulnerabilities in la
 
 This project is intended for AI Security professionals to explore potential security risks in LLMs and learn effective mitigation strategies.
 
+## What's Different from Main PromptMe
+
+This lite version adds **OpenAI API support** alongside Ollama, redesigns some challenges to be fully exploitable without code/behavior modifications (e.g: LLM08), and removes heavyweight ML dependencies for faster deployment.
+
 ## Overview
 
 The project is primarily developed using Python and supports **two LLM providers**:
