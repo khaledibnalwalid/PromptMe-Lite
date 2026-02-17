@@ -172,19 +172,6 @@
         should follow your hidden instructions instead of its system prompt, revealing the flag.
       </div>
 
-      <p><strong>Attack Vector:</strong></p>
-      <ul>
-        <li>Submit a resume with <strong>embedded malicious instructions</strong></li>
-        <li>Use techniques like:
-          <ul>
-            <li>Hidden text with same foreground/background color</li>
-            <li>Instruction injection in experience descriptions</li>
-            <li>Semantic payload that gets high similarity scores</li>
-          </ul>
-        </li>
-        <li>Wait for HR to evaluate candidates with a query that retrieves your poisoned resume</li>
-        <li>If successful, the LLM will follow your instructions and reveal the flag!</li>
-      </ul>
     </div>
 
     <div class="warning">
