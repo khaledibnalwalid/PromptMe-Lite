@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for, flash
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify
 import requests
 from bs4 import BeautifulSoup
 import uuid
@@ -318,10 +318,9 @@ def chat():
         # Rate limiting: max 20 messages per user session
         user_message_count = sum(1 for msg in sessions.get(user_id, []) if msg["role"] == "user")
         if user_message_count >= 20:
-            flash("Rate limit exceeded. Maximum 20 messages per session. Please start a new chat.", "error")
-            return redirect(url_for('chat'))
+            return jsonify({"error": "Rate limit exceeded. Maximum 20 messages per session. Please start a new chat."}), 429
 
-        user_input = request.form.get('message')
+        user_input = request.form.get('message') or request.json.get('message', '') if request.is_json else request.form.get('message', '')
         store_message(user_id, "user", user_input)
 
         # Special case: /fetch bypasses guardian
@@ -337,6 +336,8 @@ def chat():
                 bot_response = check_for_flag(bot_response)
 
         store_message(user_id, "assistant", bot_response)
+        flag_found = FLAG in bot_response
+        return jsonify({"response": bot_response, "flag_found": flag_found})
 
     chat_history = sessions.get(user_id, [])
     return render_template('chat.html', chat_history=chat_history)

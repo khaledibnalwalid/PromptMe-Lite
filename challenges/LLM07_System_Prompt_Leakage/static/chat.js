@@ -114,65 +114,27 @@ chatForm.addEventListener('submit', async (e) => {
     showLoading();
 
     try {
-        const params = new URLSearchParams();
-        params.append('message', message);
-
         const response = await fetch('/ask', {
             method: 'POST',
-            body: params
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
         });
 
-        const html = await response.text();
+        const data = await response.json();
 
         // Remove loading
         removeLoading();
 
-        // Parse the HTML response
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+        if (data.error) {
+            addMessage(data.error, 'assistant');
+        } else {
+            addMessage(data.response, 'assistant');
 
-        // Check for error banner
-        const errorBanner = doc.querySelector('.error-banner');
-        if (errorBanner) {
-            addMessage(errorBanner.textContent.trim(), 'assistant');
-            messageInput.value = '';
-            sendBtn.disabled = false;
-            sendBtn.textContent = 'Send';
-            return;
-        }
-
-        // Get assistant messages
-        const messages = doc.querySelectorAll('.message.assistant');
-
-        if (messages.length > 0) {
-            // Get the last assistant message
-            const lastMessage = messages[messages.length - 1];
-            const messageText = lastMessage.querySelector('.message-text');
-
-            if (messageText) {
-                const content = messageText.innerHTML || messageText.textContent;
-
-                // Create a temporary div to extract pure text
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = content;
-                const textContent = tempDiv.textContent || tempDiv.innerText;
-
-                addMessage(textContent, 'assistant');
-
-                // Check if API key was leaked (success)
-                if (content.includes('d368130b3370c44860743687208a846e')) {
-                    showSuccessBanner();
-                }
+            if (data.success) {
+                showSuccessBanner();
             }
-        }
 
-        // Update query counter
-        const newCounter = doc.querySelector('#query-counter');
-        if (newCounter) {
-            const match = newCounter.textContent.match(/(\d+)\/20/);
-            if (match) {
-                updateQueryCounter(parseInt(match[1]));
-            }
+            updateQueryCounter(data.query_count);
         }
 
     } catch (error) {

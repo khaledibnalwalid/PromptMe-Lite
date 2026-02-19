@@ -86,43 +86,21 @@ chatForm.addEventListener('submit', async (e) => {
     showLoading();
 
     try {
-        const params = new URLSearchParams();
-        params.append('message', message);
-
         const response = await fetch('/chat', {
             method: 'POST',
-            body: params
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
         });
 
-        const html = await response.text();
+        const data = await response.json();
 
         // Remove loading
         removeLoading();
 
-        // Parse the HTML response to extract the bot's message
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const messages = doc.querySelectorAll('.message.assistant');
-
-        if (messages.length > 0) {
-            // Get the last assistant message (the new one)
-            const lastMessage = messages[messages.length - 1];
-            const messageText = lastMessage.querySelector('.message-text');
-
-            if (messageText) {
-                // Check if there's a FLAG span
-                const flagSpan = messageText.querySelector('.flag');
-                if (flagSpan) {
-                    // Extract text before FLAG and the FLAG itself
-                    const textContent = messageText.childNodes[0]?.textContent?.trim() || '';
-                    const flagContent = flagSpan.textContent;
-                    addMessage(textContent + '\n' + flagContent, 'assistant');
-                } else {
-                    addMessage(messageText.textContent, 'assistant');
-                }
-            }
+        if (data.error) {
+            addMessage(data.error, 'system');
         } else {
-            addMessage('Error: No response received', 'assistant');
+            addMessage(data.response, 'assistant');
         }
     } catch (error) {
         removeLoading();
