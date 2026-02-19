@@ -114,13 +114,12 @@ chatForm.addEventListener('submit', async (e) => {
     showLoading();
 
     try {
-        // Send to server using FormData
-        const formData = new FormData();
-        formData.append('message', message);
+        const params = new URLSearchParams();
+        params.append('message', message);
 
         const response = await fetch('/ask', {
             method: 'POST',
-            body: formData
+            body: params
         });
 
         const html = await response.text();
